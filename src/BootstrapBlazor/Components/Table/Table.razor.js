@@ -840,7 +840,7 @@ const saveColumnWidth = table => {
 }
 
 const setTableDefaultWidth = table => {
-    if (table.tables[0].checkVisibility()) {
+    if (table.tables[0] && table.tables[0].checkVisibility()) {
         const { scrollWidth, columnMinWidth } = table.options;
         const tableWidth = [...table.tables[0].querySelectorAll('col')]
             .map(i => {
