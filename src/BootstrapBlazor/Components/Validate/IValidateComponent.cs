@@ -5,7 +5,7 @@
 namespace BootstrapBlazor.Components;
 
 /// <summary>
-/// IValidComponent 接口
+/// IValidateComponent 接口
 /// </summary>
 public interface IValidateComponent
 {
@@ -32,6 +32,5 @@ public interface IValidateComponent
     /// 显示或者隐藏提示信息方法
     /// </summary>
     /// <param name="results"></param>
-    /// <param name="validProperty">是否为模型验证 true 为属性验证 false 为整个模型验证</param>
-    void ToggleMessage(IEnumerable<ValidationResult> results, bool validProperty);
+    void ToggleMessage(IEnumerable<ValidationResult> results);
 }

@@ -40,6 +40,12 @@ public partial class ValidateForm
     public Action<string, object?>? OnFieldValueChanged { get; set; }
 
     /// <summary>
+    /// 获得/设置 是否显示所有验证失败字段的提示信息 默认 false 仅显示第一个验证失败字段的提示信息
+    /// </summary>
+    [Parameter]
+    public bool ShowAllInvalidResult { get; set; }
+
+    /// <summary>
     /// 获得/设置 是否验证所有字段 默认 false
     /// </summary>
     [Parameter]
@@ -104,6 +110,18 @@ public partial class ValidateForm
     private string? DisableAutoSubmitString => (DisableAutoSubmitFormByEnter.HasValue && DisableAutoSubmitFormByEnter.Value) ? "true" : null;
 
     /// <summary>
+    /// 验证合法成员集合
+    /// </summary>
+    internal List<string> ValidMemberNames { get; } = [];
+
+    /// <summary>
+    /// 验证非法成员集合
+    /// </summary>
+    internal List<ValidationResult> InvalidMemberNames { get; } = [];
+
+    private string? ShowAllInvalidResultString => ShowAllInvalidResult ? "true" : null;
+
+    /// <summary>
     /// OnParametersSet 方法
     /// </summary>
     protected override void OnParametersSet()
@@ -163,7 +181,7 @@ public partial class ValidateForm
                 {
                     new(errorMessage, new string[] { fieldName })
                 };
-                validator.ToggleMessage(results, true);
+                validator.ToggleMessage(results);
             }
         }
     }
@@ -181,7 +199,7 @@ public partial class ValidateForm
             {
                 new(errorMessage, new string[] { fieldName })
             };
-            validator.ToggleMessage(results, true);
+            validator.ToggleMessage(results);
         }
     }
 
@@ -253,8 +271,30 @@ public partial class ValidateForm
                         await ValidateAsync(validator, propertyValidateContext, messages, pi, propertyValue);
                     }
                     // 客户端提示
-                    validator.ToggleMessage(messages, false);
+                    validator.ToggleMessage(messages);
                     results.AddRange(messages);
+                }
+            }
+
+            // 验证 IValidatableObject
+            if (results.Count == 0)
+            {
+                if (context.ObjectInstance is IValidatableObject validatableObject)
+                {
+                    var messages = validatableObject.Validate(context);
+                    if (messages.Any())
+                    {
+                        foreach (var key in _validatorCache.Keys)
+                        {
+                            var validatorValue = _validatorCache[key];
+                            var validator = validatorValue.ValidateComponent;
+                            if (validator.IsNeedValidate)
+                            {
+                                validator.ToggleMessage(messages);
+                            }
+                        }
+                        results.AddRange(messages);
+                    }
                 }
             }
         }
@@ -280,7 +320,7 @@ public partial class ValidateForm
                 }
 
                 // 客户端提示
-                validator.ToggleMessage(results, true);
+                validator.ToggleMessage(results);
             }
         }
     }
@@ -402,10 +442,16 @@ public partial class ValidateForm
                         await ValidateAsync(validator, context, messages, pi, propertyValue);
 
                         // 客户端提示
-                        validator.ToggleMessage(messages, true);
+                        validator.ToggleMessage(messages);
                     }
                     results.AddRange(messages);
                 }
+            }
+            else
+            {
+                var messages = new List<ValidationResult>();
+                ValidateDataAnnotations(propertyValue, context, messages, pi);
+                results.AddRange(messages);
             }
         }
     }
@@ -435,10 +481,21 @@ public partial class ValidateForm
             ValidateDataAnnotations(propertyValue, context, messages, pi);
             if (messages.Count == 0)
             {
-                _tcs = new();
                 // 自定义验证组件
+                _tcs = new();
                 await validator.ValidatePropertyAsync(propertyValue, context, messages);
                 _tcs.TrySetResult(messages.Count == 0);
+            }
+
+            if (messages.Count == 0)
+            {
+                // 联动字段验证 IValidateCollection
+                if (context.ObjectInstance is IValidateCollection validateCollection)
+                {
+                    messages.AddRange(validateCollection.Validate(context));
+                    ValidMemberNames.AddRange(validateCollection.ValidMemberNames());
+                    InvalidMemberNames.AddRange(validateCollection.InvalidMemberNames());
+                }
             }
         }
 
@@ -556,7 +613,7 @@ public partial class ValidateForm
     /// 获取 当前表单值改变的属性集合
     /// </summary>
     /// <returns></returns>
-    [Obsolete("已过期，单词拼写错误，请使用 ValueChangedFields，Please use ValueChangedFields instead. wrong typo")]
+    [Obsolete("已弃用，单词拼写错误，请使用 ValueChangedFields，Deprecated Please use ValueChangedFields instead. wrong typo")]
     [ExcludeFromCodeCoverage]
     public ConcurrentDictionary<FieldIdentifier, object?> ValueChagnedFields { get; } = new();
 }
