@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using System.Collections;
 using Console = BootstrapBlazor.Components.Console;
@@ -194,7 +195,7 @@ public class ConsoleTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void ClickAutoScroll_OK()
+    public async Task ClickAutoScroll_OK()
     {
         var cut = Context.RenderComponent<Console>(builder =>
         {
@@ -205,7 +206,8 @@ public class ConsoleTest : BootstrapBlazorTestBase
             builder.Add(a => a.ShowAutoScroll, true);
         });
 
-        cut.Find(".card-footer input").Click();
+        var item = cut.FindComponent<Checkbox<bool>>();
+        await cut.InvokeAsync(item.Instance.OnToggleClick);
         var res = cut.Instance.IsAutoScroll;
         Assert.False(res);
     }

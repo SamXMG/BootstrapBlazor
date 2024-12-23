@@ -14,9 +14,6 @@ export function init(id, invoke) {
 
     if (el.querySelector('[data-bs-toggle="bb.dropdown"]')) {
         ac.popover = Popover.init(el, { toggleClass: '[data-bs-toggle="bb.dropdown"]' });
-        EventHandler.on(input, 'focus', e => {
-            input.click();
-        });
     }
 
     // debounce
@@ -26,7 +23,7 @@ export function init(id, invoke) {
         EventHandler.on(input, 'keyup', debounce(e => {
             invoke.invokeMethodAsync('OnKeyUp', e.code)
         }, duration, e => {
-            return ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Escape', 'Enter'].indexOf(e.key) > -1
+            return ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Escape', 'Enter', 'NumpadEnter'].indexOf(e.key) > -1
         }))
     }
     else {
@@ -69,6 +66,11 @@ export function composition(id) {
         ac.composition = true
         Input.composition(`${id}_input`, ac.invoke, 'TriggerOnChange')
     }
+}
+
+export function triggerFocus(id) {
+    const ac = Data.get(id)
+    ac.popover?.show();
 }
 
 export function dispose(id) {

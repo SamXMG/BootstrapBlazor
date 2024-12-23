@@ -1,8 +1,10 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Web;
+using System.Reflection;
 
 namespace UnitTest.Components;
 
@@ -11,9 +13,10 @@ public class AutoCompleteTest : BootstrapBlazorTestBase
     [Fact]
     public void Parameter_Ok()
     {
+        var items = new List<string>() { "test1", "test2" };
         var cut = Context.RenderComponent<AutoComplete>(builder =>
         {
-            builder.Add(a => a.Items, new string[] { "test1", "test2" });
+            builder.Add(a => a.Items, items);
             builder.Add(a => a.NoDataTip, "test3");
             builder.Add(a => a.ShowNoDataTip, true);
             builder.Add(a => a.DisplayCount, 10);
@@ -173,12 +176,12 @@ public class AutoCompleteTest : BootstrapBlazorTestBase
 
         cut.InvokeAsync(() => cut.Instance.OnKeyUp("t"));
         cut.InvokeAsync(() => cut.Instance.OnKeyUp("ArrowDown"));
-        cut.InvokeAsync(() => cut.Instance.OnKeyUp("Enter"));
+        cut.InvokeAsync(() => cut.Instance.OnKeyUp("NumpadEnter"));
         Assert.True(enter);
     }
 
     [Fact]
-    public void ShowDropdownListOnFocus_Ok()
+    public async Task ShowDropdownListOnFocus_Ok()
     {
         IEnumerable<string> items = new List<string>() { "test1", "test2" };
         var cut = Context.RenderComponent<AutoComplete>(pb =>
@@ -188,26 +191,20 @@ public class AutoCompleteTest : BootstrapBlazorTestBase
         });
 
         // 获得焦点时不会自动弹出下拉框
-        cut.InvokeAsync(() =>
-        {
-            var input = cut.Find("input");
-            input.FocusAsync(new FocusEventArgs());
-            var menu = cut.Find("ul");
-            Assert.Equal("dropdown-menu", menu.ClassList.ToString());
-        });
+        var input = cut.Find("input");
+        await cut.InvokeAsync(() => input.FocusAsync(new FocusEventArgs()));
+        var menu = cut.Find("ul");
+        Assert.Equal("dropdown-menu", menu.ClassList.ToString());
 
         // 获得焦点时自动弹出下拉框
         cut.SetParametersAndRender(pb =>
         {
             pb.Add(a => a.ShowDropdownListOnFocus, true);
         });
-        cut.InvokeAsync(() =>
-        {
-            var input = cut.Find("input");
-            input.FocusAsync(new FocusEventArgs());
-            var menu = cut.Find("ul");
-            Assert.Equal("dropdown-menu show", menu.ClassList.ToString());
-        });
+        input = cut.Find("input");
+        await cut.InvokeAsync(() => input.FocusAsync(new FocusEventArgs()));
+        // IsShown = true
+        Assert.True(GetShownValue(cut.Instance));
 
         var filter = false;
         cut.SetParametersAndRender(pb =>
@@ -221,12 +218,25 @@ public class AutoCompleteTest : BootstrapBlazorTestBase
         });
 
         // trigger focus
-        cut.InvokeAsync(() =>
+        input = cut.Find("input");
+        await cut.InvokeAsync(() => input.FocusAsync(new FocusEventArgs()));
+        Assert.True(filter);
+
+        cut.SetParametersAndRender(pb =>
         {
-            var input = cut.Find("input");
-            input.FocusAsync(new FocusEventArgs());
-            Assert.True(filter);
+            pb.Add(a => a.IsPopover, true);
+            pb.Add(a => a.OnFocusFilter, false);
         });
+        input = cut.Find("input");
+        await cut.InvokeAsync(() => input.FocusAsync(new FocusEventArgs()));
+        // IsShown = true
+        Assert.True(GetShownValue(cut.Instance));
+    }
+
+    private static bool GetShownValue(AutoComplete instance)
+    {
+        var fieldInfo = instance.GetType().GetField("_isShown", BindingFlags.NonPublic | BindingFlags.Instance);
+        return fieldInfo?.GetValue(instance) is true;
     }
 
     [Fact]
@@ -294,7 +304,7 @@ public class AutoCompleteTest : BootstrapBlazorTestBase
     [Fact]
     public void IsPopover_Ok()
     {
-        IEnumerable<string> items = new List<string>() { "test1", "test2" };
+        var items = new List<string>() { "test1", "test2" };
         var cut = Context.RenderComponent<AutoComplete>(pb =>
         {
             pb.Add(a => a.Items, items);
@@ -308,5 +318,30 @@ public class AutoCompleteTest : BootstrapBlazorTestBase
         cut.Contains("data-bs-toggle=\"bb.dropdown\"");
         cut.DoesNotContain("data-bs-placement");
         cut.Contains("data-bs-custom-class=\"ac-pop-test shadow\"");
+    }
+
+    [Fact]
+    public async Task OnBlurAsync_Ok()
+    {
+        string? val = "";
+        var items = new List<string>() { "test1", "test2" };
+        var cut = Context.RenderComponent<AutoComplete>(pb =>
+        {
+            pb.Add(a => a.Items, items);
+            pb.Add(a => a.OnBlurAsync, v =>
+            {
+                val = v;
+                return Task.CompletedTask;
+            });
+        });
+
+        // trigger blur
+        var input = cut.Find("input");
+        await cut.InvokeAsync(() =>
+        {
+            input.Input("123");
+            input.Blur();
+        });
+        Assert.Equal("123", val);
     }
 }

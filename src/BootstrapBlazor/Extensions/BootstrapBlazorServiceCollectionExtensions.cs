@@ -1,8 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using BootstrapBlazor.Localization.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Globalization;
@@ -26,7 +26,6 @@ public static class BootstrapBlazorServiceCollectionExtensions
         services.AddMemoryCache();
         services.AddHttpClient();
 
-        services.AddAuthorizationCore();
         services.AddJsonLocalization(localizationConfigure);
 
         services.AddConfiguration();
@@ -69,7 +68,8 @@ public static class BootstrapBlazorServiceCollectionExtensions
         services.TryAddScoped<IGeoLocationService, DefaultGeoLocationService>();
         services.TryAddScoped<IComponentHtmlRenderer, ComponentHtmlRenderer>();
         services.TryAddScoped<IBrowserFingerService, DefaultBrowserFingerService>();
-
+        services.TryAddScoped<ISerialService, DefaultSerialService>();
+        services.TryAddScoped<IBluetooth, DefaultBluetooth>();
         services.AddScoped<TabItemTextOptions>();
         services.AddScoped<DialogService>();
         services.AddScoped<MaskService>();
@@ -85,7 +85,6 @@ public static class BootstrapBlazorServiceCollectionExtensions
         services.AddScoped<AjaxService>();
         services.AddScoped(typeof(DragDropService<>));
         services.AddScoped<ClipboardService>();
-        services.AddScoped<ResizeNotificationService>();
         services.AddScoped<NotificationService>();
         services.AddScoped<EyeDropperService>();
         services.AddScoped<WebSpeechService>();

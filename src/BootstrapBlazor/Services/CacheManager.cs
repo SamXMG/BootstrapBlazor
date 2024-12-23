@@ -1,9 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using BootstrapBlazor.Localization;
-using BootstrapBlazor.Localization.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -698,7 +697,7 @@ internal class CacheManager : ICacheManager
         }
     }
 
-    public static object GetFormatterInvoker(Type type, Func<object?, Task<string?>> formatter)
+    public static object GetFormatterInvoker(Type type, Func<object, Task<string?>> formatter)
     {
         var cacheKey = $"{nameof(GetFormatterInvoker)}-{type.GetUniqueTypeName()}";
         var invoker = Instance.GetOrCreate(cacheKey, entry =>
@@ -708,16 +707,48 @@ internal class CacheManager : ICacheManager
         });
         return invoker(formatter);
 
-        static Expression<Func<Func<object?, Task<string?>>, object>> GetFormatterInvokerLambda(Type type)
+        static Expression<Func<Func<object, Task<string?>>, object>> GetFormatterInvokerLambda(Type type)
         {
             var method = typeof(CacheManager).GetMethod(nameof(InvokeFormatterAsync), BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(type);
             var exp_p1 = Expression.Parameter(typeof(Func<object?, Task<string?>>));
             var body = Expression.Call(null, method, exp_p1);
-            return Expression.Lambda<Func<Func<object?, Task<string?>>, object>>(body, exp_p1);
+            return Expression.Lambda<Func<Func<object, Task<string?>>, object>>(body, exp_p1);
         }
     }
 
     private static Func<TType, Task<string?>> InvokeFormatterAsync<TType>(Func<object?, Task<string?>> formatter) => new(v => formatter(v));
 
+    #endregion
+
+    #region TypeExtensions
+    /// <summary>
+    /// 通过指定类型获得所有属性信息
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static List<PropertyInfo> GetRuntimeProperties(Type type)
+    {
+        var cacheKey = $"{nameof(GetRuntimeProperties)}-{type.GetUniqueTypeName()}";
+        return Instance.GetOrCreate(cacheKey, entry =>
+        {
+            entry.SetDynamicAssemblyPolicy(type);
+            return type.GetRuntimeProperties().ToList();
+        });
+    }
+
+    /// <summary>
+    /// 通过指定类型获得所有字段信息
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static List<FieldInfo> GetRuntimeFields(Type type)
+    {
+        var cacheKey = $"{nameof(GetRuntimeFields)}-{type.GetUniqueTypeName()}";
+        return Instance.GetOrCreate(cacheKey, entry =>
+        {
+            entry.SetDynamicAssemblyPolicy(type);
+            return type.GetRuntimeFields().ToList();
+        })!;
+    }
     #endregion
 }

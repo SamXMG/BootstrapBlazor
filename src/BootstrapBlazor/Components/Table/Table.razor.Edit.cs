@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -86,6 +87,12 @@ public partial class Table<TItem>
     /// </summary>
     [Parameter]
     public Func<TItem, string?>? SetRowClassFormatter { get; set; }
+
+    /// <summary>
+    /// 获得/设置 取消保存后回调委托方法
+    /// </summary>
+    [Parameter]
+    public Func<Task>? OnAfterCancelSaveAsync { get; set; }
 
     /// <summary>
     /// 获得/设置 保存后回调委托方法
@@ -287,22 +294,27 @@ public partial class Table<TItem>
     [Parameter]
     public Func<TItem>? CreateItemCallback { get; set; }
 
-    private TItem CreateTItem()
+    private TItem CreateTItem() => CreateItemCallback?.Invoke() ?? CreateInstance();
+
+    private TItem CreateInstance()
     {
-        var item = CreateItemCallback?.Invoke();
-        if (item == null)
+        try
         {
-            try
-            {
-                item = Activator.CreateInstance<TItem>();
-            }
-            catch (Exception)
-            {
-                throw new InvalidOperationException($"{typeof(TItem)} missing new() method. Please provider {nameof(CreateItemCallback)} create the {typeof(TItem)} instance. {typeof(TItem)} 未提供无参构造函数 new() 请通过 {nameof(CreateItemCallback)} 回调方法创建实例");
-            }
+            return Activator.CreateInstance<TItem>();
         }
-        return item;
+        catch (Exception)
+        {
+            throw new InvalidOperationException($"{typeof(TItem)} missing new() method. Please provider {nameof(CreateItemCallback)} create the {typeof(TItem)} instance. {typeof(TItem)} 未提供无参构造函数 new() 请通过 {nameof(CreateItemCallback)} 回调方法创建实例");
+        }
     }
+
+    /// <summary>
+    /// 获得/设置 新建搜索模型回调方法 默认 null 未设置时先 尝试使用 <see cref="CreateItemCallback"/> 回调，再使用默认无参构造函数创建
+    /// </summary>
+    [Parameter]
+    public Func<TItem>? CreateSearchModelCallback { get; set; }
+
+    private TItem CreateSearchModel() => CreateSearchModelCallback?.Invoke() ?? CreateTItem();
 
     /// <summary>
     /// 单选模式下选择行时调用此方法
@@ -361,7 +373,7 @@ public partial class Table<TItem>
     protected Task OnClickRefreshAsync() => QueryAsync();
 
     /// <summary>
-    /// 
+    /// 点击 CardView 按钮回调方法
     /// </summary>
     /// <returns></returns>
     protected void OnClickCardView()
@@ -376,6 +388,7 @@ public partial class Table<TItem>
             TableRenderMode.Table => TableRenderMode.CardView,
             _ => TableRenderMode.Table
         };
+        _viewChanged = true;
         StateHasChanged();
     }
 

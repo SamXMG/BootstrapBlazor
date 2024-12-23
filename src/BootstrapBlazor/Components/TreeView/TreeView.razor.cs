@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
@@ -49,33 +50,22 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
         .AddClass("visible", item.HasChildren || item.Items.Count > 0)
         .AddClass(NodeIcon, !item.IsExpand)
         .AddClass(ExpandNodeIcon, item.IsExpand)
-        .AddClass("disabled", !CanExpandWhenDisabled && GetItemDisabledState(item))
+        .AddClass("disabled", IsDisabled || (!CanExpandWhenDisabled && item.IsDisabled))
         .Build();
 
-    /// <summary>
-    /// 获得/设置 当前行样式
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
-    private string? GetItemClassString(TreeViewItem<TItem> item) => CssBuilder.Default("tree-item")
+    private string? NodeLoadingClassString => CssBuilder.Default("node-icon node-loading")
+        .AddClass(LoadingIcon)
+        .Build();
+
+    private string? GetContentClassString(TreeViewItem<TItem> item) => CssBuilder.Default("tree-content")
         .AddClass("active", ActiveItem == item)
-        .AddClass("disabled", !CanExpandWhenDisabled && GetItemDisabledState(item))
-        .Build();
-
-    /// <summary>
-    /// 获得/设置 Tree 样式
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
-    private static string? GetTreeClassString(TreeViewItem<TItem> item) => CssBuilder.Default("tree-ul")
-        .AddClass("show", item.IsExpand)
         .Build();
 
     private string? GetNodeClassString(TreeViewItem<TItem> item) => CssBuilder.Default("tree-node")
         .AddClass("disabled", GetItemDisabledState(item))
         .Build();
 
-    private bool TriggerNodeArrow(TreeViewItem<TItem> item) => (CanExpandWhenDisabled || !GetItemDisabledState(item)) && (item.HasChildren || item.Items.Count > 0);
+    private bool CanTriggerClickNode(TreeViewItem<TItem> item) => !IsDisabled && (CanExpandWhenDisabled || !item.IsDisabled);
 
     private bool TriggerNodeLabel(TreeViewItem<TItem> item) => !GetItemDisabledState(item);
 
@@ -99,7 +89,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     public bool CanExpandWhenDisabled { get; set; }
 
     /// <summary>
-    /// 获得/设置 是否为手风琴效果 默认为 false
+    /// 获得/设置 是否为手风琴效果 默认为 false <see cref="IsVirtualize"/> 虚拟滚动模式下不支持手风琴效果
     /// </summary>
     [Parameter]
     public bool IsAccordion { get; set; }
@@ -234,6 +224,12 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     public Func<TItem, TItem, bool>? ModelEqualityComparer { get; set; }
 
     /// <summary>
+    /// 获得/设置 Tree Node 正在加载动画图标
+    /// </summary>
+    [Parameter]
+    public string? LoadingIcon { get; set; }
+
+    /// <summary>
     /// 获得/设置 Tree Node 节点图标
     /// </summary>
     [Parameter]
@@ -244,6 +240,36 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     /// </summary>
     [Parameter]
     public string? ExpandNodeIcon { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否开启键盘上下左右按键操作 默认 false
+    /// <para>ArrowLeft 收起节点</para>
+    /// <para>ArrowRight 展开节点</para>
+    /// <para>ArrowUp 向上移动节点</para>
+    /// <para>ArrowDown 向下移动节点</para>
+    /// <para>Space 选中当前节点</para>
+    /// </summary>
+    [Parameter]
+    public bool EnableKeyboard { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否键盘上下键操作当前选中节点与视窗关系配置 默认 null 使用 { behavior: "smooth", block: "center", inline: "nearest" }
+    /// </summary>
+    [Parameter]
+    public ScrollIntoViewOptions? ScrollIntoViewOptions { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否启用虚拟滚动 默认 false 不启用
+    /// </summary>
+    [Parameter]
+    public bool IsVirtualize { get; set; }
+
+    /// <summary>
+    /// 获得/设置 虚拟滚动行高 默认为 38
+    /// </summary>
+    /// <remarks>需要设置 <see cref="ScrollMode"/> 值为 Virtual 时生效</remarks>
+    [Parameter]
+    public float RowHeight { get; set; } = 38f;
 
     [CascadingParameter]
     private ContextMenuZone? ContextMenuZone { get; set; }
@@ -267,7 +293,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     /// 节点状态缓存类实例
     /// </summary>
     [NotNull]
-    protected TreeNodeCache<TreeViewItem<TItem>, TItem>? TreeNodeStateCache { get; set; }
+    private TreeNodeCache<TreeViewItem<TItem>, TItem>? TreeNodeStateCache { get; set; }
 
     /// <summary>
     /// 改变节点状态后自动更新子节点 默认 false
@@ -283,6 +309,14 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
 
     private string? _searchText;
 
+    private string? EnableKeyboardString => EnableKeyboard ? "true" : null;
+
+    private static string? GetItemTextClassString(TreeViewItem<TItem> item) => CssBuilder.Default("tree-node-text")
+        .AddClass(item.CssClass)
+        .Build();
+
+    private bool _init;
+
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
@@ -291,7 +325,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
         base.OnInitialized();
 
         // 初始化节点缓存
-        TreeNodeStateCache ??= new(Equals);
+        TreeNodeStateCache ??= new(this);
         NotSetOnTreeExpandErrorMessage = Localizer[nameof(NotSetOnTreeExpandErrorMessage)];
     }
 
@@ -306,6 +340,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
         ExpandNodeIcon ??= IconTheme.GetIconByKey(ComponentIcons.TreeViewExpandNodeIcon);
         SearchIcon ??= IconTheme.GetIconByKey(ComponentIcons.TreeViewSearchIcon);
         ClearSearchIcon ??= IconTheme.GetIconByKey(ComponentIcons.TreeViewResetSearchIcon);
+        LoadingIcon ??= IconTheme.GetIconByKey(ComponentIcons.TreeViewLoadingIcon);
     }
 
     /// <summary>
@@ -318,6 +353,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
         {
             if (IsReset)
             {
+                _rows = null;
                 TreeNodeStateCache.Reset();
             }
             else
@@ -343,6 +379,150 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
             // 设置 ActiveItem 默认值
             ActiveItem ??= Items.FirstOrDefaultActiveItem();
             ActiveItem?.SetParentExpand<TreeViewItem<TItem>, TItem>(true);
+            _init = true;
+        }
+        else
+        {
+            _rows = null;
+            TreeNodeStateCache.Reset();
+            ActiveItem = null;
+        }
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <param name="firstRender"></param>
+    /// <returns></returns>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (_keyboardArrowUpDownTrigger)
+        {
+            _keyboardArrowUpDownTrigger = false;
+            await InvokeVoidAsync("scroll", Id, ScrollIntoViewOptions);
+        }
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <returns></returns>
+    protected override Task InvokeInitAsync() => InvokeVoidAsync("init", Id, new { Invoke = Interop, Method = nameof(TriggerKeyDown) });
+
+    private bool _keyboardArrowUpDownTrigger;
+
+    /// <summary>
+    /// 客户端用户键盘操作处理方法 由 JavaScript 调用
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    [JSInvokable]
+    public async ValueTask TriggerKeyDown(string key)
+    {
+        // 通过 ActiveItem 找到兄弟节点
+        // 如果兄弟节点没有时，找到父亲节点
+        if (ActiveItem != null)
+        {
+            if (key == "ArrowUp" || key == "ArrowDown")
+            {
+                _keyboardArrowUpDownTrigger = true;
+                await ActiveTreeViewItem(key, ActiveItem);
+            }
+            else if (key == "ArrowLeft" || key == "ArrowRight")
+            {
+                await OnToggleNodeAsync(ActiveItem, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 客户端查询指定行选择框状态方法 由 JavaScript 调用
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    [JSInvokable]
+    public Task<List<CheckboxState>> GetParentsState(List<int> items)
+    {
+        var rows = Rows;
+        var result = items.Select(i =>
+        {
+            var item = rows[i];
+            var checkedState = item.Items[0].CheckedState;
+            if (item.Items.Any(s => s.CheckedState != checkedState))
+            {
+                checkedState = CheckboxState.Indeterminate;
+            }
+            item.CheckedState = checkedState;
+            return checkedState;
+        }).ToList();
+        return Task.FromResult(result);
+    }
+
+    private static bool IsExpand(TreeViewItem<TItem> item) => item.IsExpand && item.Items.Count > 0;
+
+    private List<TreeViewItem<TItem>> GetItems(TreeViewItem<TItem> item) => item.Parent?.Items ?? Items;
+
+    private async Task ActiveTreeViewItem(string key, TreeViewItem<TItem> item)
+    {
+        var items = GetItems(item);
+        var index = items.IndexOf(item);
+
+        if (key == "ArrowUp")
+        {
+            index--;
+            if (index >= 0)
+            {
+                var currentItem = items[index];
+                if (IsExpand(currentItem))
+                {
+                    await OnClick(currentItem.Items[^1]);
+                }
+                else
+                {
+                    await OnClick(currentItem);
+                }
+            }
+            else if (item.Parent != null)
+            {
+                await OnClick(item.Parent);
+            }
+        }
+        else if (key == "ArrowDown")
+        {
+            if (IsExpand(item))
+            {
+                await OnClick(item.Items[0]);
+            }
+            else
+            {
+                index++;
+                if (index < items.Count)
+                {
+                    await OnClick(items[index]);
+                }
+                else if (item.Parent != null)
+                {
+                    await ActiveParentTreeViewItem(item.Parent);
+                }
+            }
+        }
+    }
+
+    private async Task ActiveParentTreeViewItem(TreeViewItem<TItem> item)
+    {
+        var items = GetItems(item);
+        var index = items.IndexOf(item);
+
+        index++;
+        if (index < items.Count)
+        {
+            await OnClick(items[index]);
+        }
+        else if (item.Parent != null)
+        {
+            await ActiveParentTreeViewItem(item.Parent);
         }
     }
 
@@ -387,12 +567,10 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
         {
             throw new InvalidOperationException(NotSetOnTreeExpandErrorMessage);
         }
-        node.ShowLoading = true;
 
-        StateHasChanged();
-
+        await InvokeVoidAsync("toggleLoading", Id, Rows.IndexOf(node), true);
         var ret = await OnExpandNodeAsync(node);
-        node.ShowLoading = false;
+        await InvokeVoidAsync("toggleLoading", Id, Rows.IndexOf(node), false);
         return ret;
     }
 
@@ -403,7 +581,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     private async Task OnClick(TreeViewItem<TItem> item)
     {
         ActiveItem = item;
-        if (ClickToggleNode && TriggerNodeArrow(item))
+        if (ClickToggleNode && CanTriggerClickNode(item))
         {
             await OnToggleNodeAsync(item);
         }
@@ -415,8 +593,8 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
 
         if (ShowCheckbox && ClickToggleCheck)
         {
-            item.CheckedState = ToggleCheckState(item.CheckedState);
-            await OnCheckStateChanged(item);
+            var state = ToggleCheckState(item.CheckedState);
+            await OnCheckStateChanged(item, state);
         }
 
         StateHasChanged();
@@ -482,7 +660,7 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     {
         // 手风琴效果逻辑
         node.IsExpand = !node.IsExpand;
-        if (IsAccordion)
+        if (IsAccordion && !IsVirtualize)
         {
             await TreeNodeStateCache.ToggleNodeAsync(node, GetChildrenRowAsync);
 
@@ -498,21 +676,29 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
                     await TreeNodeStateCache.ToggleNodeAsync(n, GetChildrenRowAsync);
                 }
             }
+            _rows = null;
         }
         else
         {
             // 重建缓存 并且更改节点展开状态
             await TreeNodeStateCache.ToggleNodeAsync(node, GetChildrenRowAsync);
+            _rows = null;
         }
 
         if (ShowCheckbox)
         {
+            if (AutoCheckChildren)
+            {
+                node.SetChildrenCheck(TreeNodeStateCache);
+            }
+            if (AutoCheckParent)
+            {
+                node.SetParentCheck(TreeNodeStateCache);
+            }
             if (!AutoCheckChildren && AutoCheckParent && node.Items.Count > 0)
             {
-                node.Items[0].SetParentCheck(node.Items[0].CheckedState, TreeNodeStateCache);
+                node.Items[0].SetParentCheck(TreeNodeStateCache);
             }
-
-            await OnCheckStateChanged(node);
         }
 
         if (shouldRender)
@@ -525,36 +711,33 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     /// 节点 Checkbox 状态改变时触发此方法
     /// </summary>
     /// <param name="item"></param>
-    /// <param name="shouldRender"></param>
+    /// <param name="state"></param>
     /// <returns></returns>
-    private async Task OnCheckStateChanged(TreeViewItem<TItem> item, bool shouldRender = false)
+    private async Task OnCheckStateChanged(TreeViewItem<TItem> item, CheckboxState state)
     {
+        item.CheckedState = state;
+        TreeNodeStateCache.ToggleCheck(item);
+
         if (AutoCheckChildren)
         {
             // 向下级联操作
             if (item.CheckedState != CheckboxState.Indeterminate)
             {
-                item.SetChildrenCheck(item.CheckedState, TreeNodeStateCache);
+                item.SetChildrenCheck(TreeNodeStateCache);
+                _ = InvokeVoidAsync("setChildrenState", Id, Rows.IndexOf(item), item.CheckedState);
             }
         }
 
         if (AutoCheckParent)
         {
             // 向上级联操作
-            item.SetParentCheck(item.CheckedState, TreeNodeStateCache);
+            item.SetParentCheck(TreeNodeStateCache);
+            _ = InvokeVoidAsync("setParentState", Id, Interop, nameof(GetParentsState), Rows.IndexOf(item));
         }
-
-        // 更新 选中状态缓存
-        TreeNodeStateCache.ToggleCheck(item);
 
         if (OnTreeItemChecked != null)
         {
             await OnTreeItemChecked(GetCheckedItems().ToList());
-        }
-
-        if (shouldRender)
-        {
-            StateHasChanged();
         }
     }
 
@@ -647,5 +830,50 @@ public partial class TreeView<TItem> : IModelEqualityComparer<TItem>
     private void OnTouchEnd()
     {
         TouchStart = false;
+    }
+
+    private List<TreeViewItem<TItem>>? _rows = null;
+
+    private List<TreeViewItem<TItem>> Rows
+    {
+        get
+        {
+            _rows ??= GetTreeRows(Items);
+            return _rows;
+        }
+    }
+
+    /// <summary>
+    /// 将带层次结构的数据转换为扁平化数据
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
+    private static List<TreeViewItem<TItem>> GetTreeRows(List<TreeViewItem<TItem>> items)
+    {
+        var rows = new List<TreeViewItem<TItem>>();
+        if (items != null)
+        {
+            foreach (var item in items)
+            {
+                rows.Add(item);
+                if (item.IsExpand)
+                {
+                    rows.AddRange(GetTreeRows(item.Items));
+                }
+            }
+        }
+        return rows;
+    }
+
+    private static string? GetTreeRowStyle(TreeViewItem<TItem> item)
+    {
+        var level = 0;
+        var parent = item.Parent;
+        while (parent != null)
+        {
+            level++;
+            parent = parent.Parent;
+        }
+        return $"--bb-tree-view-level: {level};";
     }
 }

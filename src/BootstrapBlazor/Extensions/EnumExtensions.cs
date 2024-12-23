@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using System.ComponentModel;
 using System.Reflection;
@@ -66,6 +67,33 @@ public static class EnumExtensions
             {
                 var desc = Utility.GetDisplayName(t, field);
                 ret.Add(new SelectedItem(field, desc));
+            }
+        }
+        return ret;
+    }
+
+    /// <summary>
+    /// 获取指定枚举类型的枚举值集合，默认通过 DisplayAttribute DescriptionAttribute 标签显示 DisplayName 支持资源文件 回退机制显示字段名称
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="additionalItem"></param>
+    /// <returns></returns>
+    public static List<SelectedItem<TValue>> ToSelectList<TValue>(this Type type, SelectedItem<TValue>? additionalItem = null)
+    {
+        var ret = new List<SelectedItem<TValue>>();
+        if (additionalItem != null)
+        {
+            ret.Add(additionalItem);
+        }
+
+        if (type.IsEnum())
+        {
+            var t = Nullable.GetUnderlyingType(type) ?? type;
+            foreach (var field in Enum.GetNames(t))
+            {
+                var desc = Utility.GetDisplayName(t, field);
+                var val = (TValue)Enum.Parse(t, field);
+                ret.Add(new SelectedItem<TValue>(val, desc));
             }
         }
         return ret;

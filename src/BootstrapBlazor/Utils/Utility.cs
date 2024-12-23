@@ -1,8 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using BootstrapBlazor.Localization.Json;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.Localization;
 using System.ComponentModel;
@@ -213,13 +213,13 @@ public static class Utility
     /// <typeparam name="TModel"></typeparam>
     public static void Reset<TModel>(TModel source, TModel model) where TModel : class
     {
-        var v = model;
+        var modelType = model.GetType();
         foreach (var pi in source.GetType().GetRuntimeProperties().Where(p => p.IsCanWrite()))
         {
-            var pInfo = v.GetType().GetPropertyByName(pi.Name);
+            var pInfo = modelType.GetPropertyByName(pi.Name);
             if (pInfo != null)
             {
-                pi.SetValue(source, pInfo.GetValue(v));
+                pi.SetValue(source, pInfo.GetValue(model));
             }
         }
     }
@@ -459,8 +459,8 @@ public static class Utility
     /// <param name="item"></param>
     /// <param name="changedType"></param>
     /// <param name="isSearch"></param>
-    /// <param name="lookUpService"></param>
-    public static void CreateComponentByFieldType(this RenderTreeBuilder builder, ComponentBase component, IEditorItem item, object model, ItemChangedType changedType = ItemChangedType.Update, bool isSearch = false, ILookupService? lookUpService = null)
+    /// <param name="lookupService"></param>
+    public static void CreateComponentByFieldType(this RenderTreeBuilder builder, ComponentBase component, IEditorItem item, object model, ItemChangedType changedType = ItemChangedType.Update, bool isSearch = false, ILookupService? lookupService = null)
     {
         var fieldType = item.PropertyType;
         var fieldName = item.GetFieldName();
@@ -469,8 +469,7 @@ public static class Utility
         var fieldValue = GenerateValue(model, fieldName);
         var fieldValueChanged = GenerateValueChanged(component, model, fieldName, fieldType);
         var valueExpression = GenerateValueExpression(model, fieldName, fieldType);
-        var lookup = item.Lookup ?? lookUpService?.GetItemsByKey(item.LookupServiceKey, item.LookupServiceData);
-        var componentType = item.ComponentType ?? GenerateComponentType(fieldType, item.Rows != 0, lookup);
+        var componentType = item.ComponentType ?? GenerateComponentType(item);
         builder.OpenComponent(0, componentType);
         if (componentType.IsSubclassOf(typeof(ValidateBase<>).MakeGenericType(fieldType)))
         {
@@ -514,20 +513,22 @@ public static class Utility
         }
 
         // Nullable<bool?>
-        if (item.ComponentType == typeof(Select<bool?>) && fieldType == typeof(bool?) && lookup == null && item.Items == null)
+        if (item.ComponentType == typeof(Select<bool?>) && fieldType == typeof(bool?) && !item.IsLookup() && item.Items == null)
         {
             builder.AddAttribute(100, nameof(Select<bool?>.Items), GetNullableBoolItems(model, fieldName));
         }
 
         // Lookup
-        if (lookup != null && item.Items == null)
+        if (item.IsLookup() && item.Items == null)
         {
             builder.AddAttribute(110, nameof(Select<SelectedItem>.ShowSearch), item.ShowSearchWhenSelect);
-            builder.AddAttribute(120, nameof(Select<SelectedItem>.Items), lookup.Clone());
+            builder.AddAttribute(120, nameof(Select<SelectedItem>.LookupService), lookupService);
+            builder.AddAttribute(121, nameof(Select<SelectedItem>.LookupServiceKey), item.LookupServiceKey);
+            builder.AddAttribute(122, nameof(Select<SelectedItem>.LookupServiceData), item.LookupServiceData);
             builder.AddAttribute(130, nameof(Select<SelectedItem>.StringComparison), item.LookupStringComparison);
         }
 
-        // 增加非枚举类,手动设定 ComponentType 为 Select 并且 Data 有值 自动生成下拉框
+        // 增加非枚举类,手动设定 ComponentType 为 Select 并且 Items 有值 自动生成下拉框
         if (item.Items != null && item.ComponentType == typeof(Select<>).MakeGenericType(fieldType))
         {
             builder.AddAttribute(140, nameof(Select<SelectedItem>.Items), item.Items.Clone());
@@ -537,7 +538,7 @@ public static class Utility
         // 设置 SkipValidate 参数
         if (IsValidComponent(componentType))
         {
-            builder.AddAttribute(160, nameof(IEditorItem.SkipValidate), item.SkipValidate);
+            builder.AddAttribute(160, nameof(IEditorItem.SkipValidate), isSearch || item.SkipValidate);
         }
 
         builder.AddMultipleAttributes(170, CreateMultipleAttributes(fieldType, model, fieldName, item));
@@ -616,15 +617,13 @@ public static class Utility
     /// <summary>
     /// 通过指定类型生成组件类型
     /// </summary>
-    /// <param name="fieldType"></param>
-    /// <param name="hasRows">是否为 TextArea 组件</param>
-    /// <param name="lookup"></param>
-    /// <returns></returns>
-    private static Type GenerateComponentType(Type fieldType, bool hasRows, IEnumerable<SelectedItem>? lookup)
+    /// <param name="item"></param>
+    private static Type GenerateComponentType(IEditorItem item)
     {
+        var fieldType = item.PropertyType;
         Type? ret = null;
         var type = (Nullable.GetUnderlyingType(fieldType) ?? fieldType);
-        if (type.IsEnum || lookup != null)
+        if (type.IsEnum || item.IsLookup())
         {
             ret = typeof(Select<>).MakeGenericType(fieldType);
         }
@@ -650,7 +649,7 @@ public static class Utility
         }
         else if (fieldType == typeof(string))
         {
-            ret = hasRows ? typeof(Textarea) : typeof(BootstrapInput<>).MakeGenericType(typeof(string));
+            ret = item.Rows > 0 ? typeof(Textarea) : typeof(BootstrapInput<>).MakeGenericType(typeof(string));
         }
         return ret ?? typeof(BootstrapInput<>).MakeGenericType(fieldType);
     }

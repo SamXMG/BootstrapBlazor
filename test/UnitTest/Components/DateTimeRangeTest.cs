@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using AngleSharp.Dom;
 using System.ComponentModel.DataAnnotations;
@@ -284,7 +285,7 @@ public class DateTimeRangeTest : BootstrapBlazorTestBase
         //Assert.True(input.ClassList.Contains("datetime"));
         //Assert.True(DateTime.TryParseExact(input.GetAttribute("Value"), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _));
 
-        // timeformat
+        // time format
         //cut.SetParametersAndRender(pb =>
         //{
         //    pb.Add(a => a.TimeFormat, "hhmmss");
@@ -331,7 +332,7 @@ public class DateTimeRangeTest : BootstrapBlazorTestBase
         var cut = Context.RenderComponent<DateTimeRange>(builder =>
         {
             builder.Add(a => a.Value, new DateTimeRangeValue { Start = DateTime.Now, End = DateTime.Now.AddDays(30) });
-            builder.Add(a => a.ValueChanged, EventCallback.Factory.Create<DateTimeRangeValue>(this, v => { value = v; }));
+            builder.Add(a => a.ValueChanged, EventCallback.Factory.Create<DateTimeRangeValue?>(this, v => { value = v; }));
         });
         cut.FindAll(".is-confirm").First(s => s.TextContent == "清空").Click();
     }

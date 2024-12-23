@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace BootstrapBlazor.Components;
 
@@ -125,9 +126,9 @@ public interface ITableColumn : IEditorItem
     string? FormatString { get; set; }
 
     /// <summary>
-    /// 获得/设置 列格式化回调委托
+    /// 获得/设置 列格式化回调委托 <see cref="TableColumnContext{TItem, TValue}"/>
     /// </summary>
-    Func<object?, Task<string?>>? Formatter { get; set; }
+    Func<object, Task<string?>>? Formatter { get; set; }
 
     /// <summary>
     /// 获得/设置 文字对齐方式 默认为 null 使用 Alignment.None

@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace BootstrapBlazor.Components;
 
@@ -109,6 +110,11 @@ public interface IEditorItem
     /// 获得/设置 <see cref="ILookupService"/> 服务获取 Lookup 数据集合键值自定义数据，通过 <see cref="LookupServiceKey"/> 指定键值
     /// </summary>
     object? LookupServiceData { get; set; }
+
+    /// <summary>
+    /// 获得/设置 <see cref="ILookupService"/> 服务实例
+    /// </summary>
+    ILookupService? LookupService { get; set; }
 
     /// <summary>
     /// 获得/设置 自定义验证集合

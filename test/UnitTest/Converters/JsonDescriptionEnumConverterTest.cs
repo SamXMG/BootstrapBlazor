@@ -1,8 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using BootstrapBlazor.Core.Converter;
 using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -42,6 +42,14 @@ public class JsonDescriptionEnumConverterTest : TestBase
         var value2 = MockEnum2.Item1;
         json = JsonSerializer.Serialize(value2);
         Assert.Equal("\"Item1\"", json);
+
+        var value3 = EnumBarcodeTextFontOption.Bold_Italic;
+        json = JsonSerializer.Serialize(value3);
+        Assert.Equal("\"bold italic\"", json);
+
+        var value4 = EnumBarcodeTextFontOption.Normal;
+        json = JsonSerializer.Serialize(value4);
+        Assert.Equal("\"\"", json);
     }
 
     [JsonConverter(typeof(JsonDescriptionEnumConverter<TestEnum>))]
@@ -69,4 +77,28 @@ public class JsonDescriptionEnumConverterTest : TestBase
 
         Item2
     }
+
+    [JsonConverter(typeof(JsonDescriptionEnumConverter<EnumBarcodeTextFontOption>))]
+    public enum EnumBarcodeTextFontOption
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        [Description("")]
+        Normal,
+        /// <summary>
+        /// 
+        /// </summary>
+        Bold,
+        /// <summary>
+        /// 
+        /// </summary>
+        Italic,
+        /// <summary>
+        /// 
+        /// </summary>
+        [Description("bold italic")]
+        Bold_Italic,
+    }
+
 }

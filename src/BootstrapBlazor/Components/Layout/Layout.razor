@@ -3,14 +3,14 @@
 @attribute [BootstrapModuleAutoLoader(JSObjectReference = true)]
 
 <CascadingValue Value="this" IsFixed="true">
-    @if (IsInit)
+    @if (_init)
     {
         @if (IsAuthenticated)
         {
             <section @attributes="AdditionalAttributes" class="@ClassString" style="@StyleString">
                 @if (Side == null)
                 {
-                    if(Header != null)
+                    if (Header != null)
                     {
                         @RenderHeader(false)
                     }
@@ -23,17 +23,17 @@
                 else if (IsFullSide)
                 {
                     <aside class="@SideClassString" style="@SideStyleString">
-                        @if(Side != null)
+                        @if (Side != null)
                         {
                             @Side
                         }
                         @if (Menus != null)
                         {
-                            @RenderMenu(IsFullSide)
+                            @RenderMenu
                         }
                     </aside>
                     <section class="layout-right">
-                        @if(Header != null)
+                        @if (Header != null)
                         {
                             @RenderHeader(ShowCollapseBar)
                         }
@@ -58,7 +58,7 @@
                             }
                             @if (Menus != null)
                             {
-                                @RenderMenu(IsFullSide)
+                                @RenderMenu
                             }
                         </aside>
                         @RenderMain
@@ -88,9 +88,9 @@
         {
             @if (CollapseBarTemplate == null)
             {
-                <a title="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="@TooltipText" class="@CollapseBarClassString" @onclick="CollapseMenu">
+                <div data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="@TooltipText" class="layout-header-bar" @onclick="ToggleSidebar">
                     <i class="@MenuBarIcon"></i>
-                </a>
+                </div>
             }
             else
             {
@@ -100,28 +100,29 @@
         @Header
     </header>;
 
-    RenderFragment<bool> RenderMenu => hasScroll =>
+    RenderFragment RenderMenu =>
     @<div class="layout-menu">
-        @if (hasScroll)
+        @if (IsFixedTabHeader || IsFullSide)
         {
             <Scroll>
-                <Menu Items="@Menus" IsVertical="true" IsCollapsed="@IsCollapsed" IsAccordion="@IsAccordion" OnClick="@ClickMenu()"></Menu>
+                <Menu Items="@Menus" IsVertical="true" IsAccordion="@IsAccordion" OnClick="ClickMenu"></Menu>
             </Scroll>
         }
         else
         {
-            <Menu Items="@Menus" IsVertical="true" IsCollapsed="@IsCollapsed" IsAccordion="@IsAccordion" OnClick="@ClickMenu()"></Menu>
+            <Menu Items="@Menus" IsVertical="true" IsAccordion="@IsAccordion" OnClick="ClickMenu"></Menu>
         }
     </div>;
 
     RenderFragment RenderMain =>
-    @<main class="@MainClassString">
+    @<main class="layout-main">
         @if (UseTabSet)
         {
-            <Tab ClickTabToNavigation="true" ShowExtendButtons="true" ShowClose="true" AllowDrag="AllowDragTab"
-                 AdditionalAssemblies="@AdditionalAssemblies" NotFoundTabText="@NotFoundTabText"
+            <Tab ClickTabToNavigation="ClickTabToNavigation" AdditionalAssemblies="@AdditionalAssemblies"
+                 ShowExtendButtons="ShowTabExtendButtons" ShowClose="ShowTabItemClose" AllowDrag="AllowDragTab"        
                  DefaultUrl="@TabDefaultUrl" ExcludeUrls="@ExcludeUrls" IsOnlyRenderActiveTab="IsOnlyRenderActiveTab"
-                 Body="@Main" NotAuthorized="NotAuthorized!" NotFound="NotFound!" />
+                 Body="@Main" NotAuthorized="NotAuthorized!" NotFound="NotFound!" NotFoundTabText="@NotFoundTabText">
+            </Tab>
         }
         else
         {
@@ -134,7 +135,7 @@
         @Footer
         @if (ShowGotoTop)
         {
-            <GoTop />
+            <GoTop Target="@GetTargetString()" />
         }
     </footer>;
 }

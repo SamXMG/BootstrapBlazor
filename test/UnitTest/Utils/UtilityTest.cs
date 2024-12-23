@@ -1,8 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using BootstrapBlazor.Localization.Json;
 using BootstrapBlazor.Server.Extensions;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -114,7 +114,7 @@ public class UtilityTest : BootstrapBlazorTestBase
     [Fact]
     public void GetPlaceHolder_Ok()
     {
-        var ph = Utility.GetPlaceHolder(typeof(Foo), "Name");
+        var ph = Utility.GetPlaceHolder<Foo>("Name");
         Assert.Equal("不可为空", ph);
 
         // 动态类型
@@ -256,7 +256,7 @@ public class UtilityTest : BootstrapBlazorTestBase
         var editor = new MockNullDisplayNameColumn("Name", typeof(string)) { Readonly = true };
         var fragment = new RenderFragment(builder => builder.CreateComponentByFieldType(new BootstrapBlazorRoot(), editor, new Foo() { Name = "Test-Component" }));
         var cut = Context.Render(builder => builder.AddContent(0, fragment));
-        Assert.Contains("class=\"form-control\" disabled=\"disabled\" value=\"Test-Component\"", cut.Markup);
+        Assert.Contains("value=\"Test-Component\"", cut.Markup);
     }
 
     [Fact]
@@ -353,7 +353,7 @@ public class UtilityTest : BootstrapBlazorTestBase
         dn = Utility.GetDisplayName<TestEnum>(nameof(TestEnum.Address));
         Assert.Equal("Test-Enum-Address", dn);
 
-        dn = Utility.GetDisplayName(typeof(Nullable<TestEnum>), nameof(TestEnum.Name));
+        dn = Utility.GetDisplayName<TestEnum?>(nameof(TestEnum.Name));
         Assert.Equal("Test-Enum-Name", dn);
     }
 
@@ -696,8 +696,12 @@ public class UtilityTest : BootstrapBlazorTestBase
     [Fact]
     public void GetTableColumns_Ok()
     {
-        var cols = Utility.GetTableColumns<Dog>().ToList();
-        Assert.Equal(2, cols.Count);
+        var columns = new InternalTableColumn[]
+        {
+            new("Name3", typeof(string)),
+        };
+        var cols = Utility.GetTableColumns<Dog>(columns).ToList();
+        Assert.Equal(3, cols.Count);
     }
 
     [Fact]

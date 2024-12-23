@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -463,7 +464,7 @@ public partial class Table<TItem>
     {
         // 不可见列
         var items = VisibleColumns.Where(i => i.Visible);
-        return Columns.Where(i => !i.GetIgnore() && items.Any(v => v.Name == i.GetFieldName()));
+        return Columns.Where(i => !i.GetIgnore() && items.Any(v => v.Name == i.GetFieldName()) && ScreenSize >= i.ShownWithBreakPoint);
     }
 
     private bool GetColumnsListState(ColumnVisibleItem item) => VisibleColumns.Find(i => i.Name == item.Name) is { Visible: true } && VisibleColumns.Where(i => i.Visible).DistinctBy(i => i.Name).Count(i => i.Visible) == 1;
@@ -486,8 +487,12 @@ public partial class Table<TItem>
             // 数据源为 DataTable 新建后重建行与列
             await DynamicContext.AddAsync(SelectedRows.OfType<IDynamicObject>());
             ResetDynamicContext();
-            SelectedRows.Clear();
-            await OnSelectedRowsChanged();
+
+            if (!IsKeepSelectedRowAfterAdd)
+            {
+                SelectedRows.Clear();
+                await OnSelectedRowsChanged();
+            }
         }
         else if (IsExcel)
         {
@@ -617,7 +622,7 @@ public partial class Table<TItem>
     /// 取消保存方法
     /// </summary>
     /// <returns></returns>
-    protected void CancelSave()
+    protected async Task CancelSave()
     {
         if (EditMode == EditMode.EditForm)
         {
@@ -629,6 +634,11 @@ public partial class Table<TItem>
             SelectedRows.Clear();
             AddInCell = false;
             EditInCell = false;
+        }
+
+        if (OnAfterCancelSaveAsync != null)
+        {
+            await OnAfterCancelSaveAsync();
         }
     }
 
@@ -845,6 +855,7 @@ public partial class Table<TItem>
     protected async Task ShowEditDialog(ItemChangedType changedType)
     {
         var saved = false;
+        var triggerFromSave = false;
         var option = new EditDialogOption<TItem>()
         {
             Class = "modal-dialog-table",
@@ -855,10 +866,18 @@ public partial class Table<TItem>
             IsDraggable = EditDialogIsDraggable,
             ShowMaximizeButton = EditDialogShowMaximizeButton,
             FullScreenSize = EditDialogFullScreenSize,
-            OnCloseAsync = () => OnCloseEditDialogCallbackAsync(saved),
+            OnCloseAsync = async () =>
+            {
+                if (triggerFromSave == false && OnAfterCancelSaveAsync != null)
+                {
+                    await OnAfterCancelSaveAsync();
+                }
+                await OnCloseEditDialogCallbackAsync(saved);
+            },
             OnEditAsync = async context =>
             {
                 saved = await OnSaveEditCallbackAsync(context, changedType);
+                triggerFromSave = true;
                 return saved;
             }
         };
@@ -874,7 +893,14 @@ public partial class Table<TItem>
         var saved = false;
         var editOption = new TableEditDrawerOption<TItem>()
         {
-            OnCloseAsync = () => OnCloseEditDialogCallbackAsync(saved),
+            OnCloseAsync = async () =>
+            {
+                if (OnAfterCancelSaveAsync != null)
+                {
+                    await OnAfterCancelSaveAsync();
+                }
+                await OnCloseEditDialogCallbackAsync(saved);
+            },
             OnEditAsync = async context =>
             {
                 saved = await OnSaveEditCallbackAsync(context, changedType);

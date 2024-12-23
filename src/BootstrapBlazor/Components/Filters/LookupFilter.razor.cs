@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Localization;
 
@@ -16,12 +17,30 @@ public partial class LookupFilter
     /// <summary>
     /// 获得/设置 相关枚举类型
     /// </summary>
-#if NET6_0_OR_GREATER
-    [EditorRequired]
-#endif
     [Parameter]
     [NotNull]
     public IEnumerable<SelectedItem>? Lookup { get; set; }
+
+    /// <summary>
+    /// 获得/设置 <see cref="ILookupService"/> 服务实例
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public ILookupService? LookupService { get; set; }
+
+    /// <summary>
+    /// 获得/设置 <see cref="ILookupService"/> 服务获取 Lookup 数据集合键值 常用于外键自动转换为名称操作，可以通过 <see cref="LookupServiceData"/> 传递自定义数据
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public string? LookupServiceKey { get; set; }
+
+    /// <summary>
+    /// 获得/设置 <see cref="ILookupService"/> 服务获取 Lookup 数据集合键值自定义数据，通过 <see cref="LookupServiceKey"/> 指定键值
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public object? LookupServiceData { get; set; }
 
     /// <summary>
     /// 获得/设置 字典数据源字符串比较规则 默认 StringComparison.OrdinalIgnoreCase 大小写不敏感 
@@ -32,9 +51,7 @@ public partial class LookupFilter
     /// <summary>
     /// 获得/设置 相关枚举类型
     /// </summary>
-#if NET6_0_OR_GREATER
     [EditorRequired]
-#endif
     [Parameter]
     [NotNull]
     public Type? Type { get; set; }
@@ -49,17 +66,16 @@ public partial class LookupFilter
     [NotNull]
     private IStringLocalizer<TableFilter>? Localizer { get; set; }
 
+    [Inject]
+    [NotNull]
+    private ILookupService? InjectLookupService { get; set; }
+
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
-        if (Lookup == null)
-        {
-            throw new InvalidOperationException("the Parameter Lookup must be set.");
-        }
 
         if (Type == null)
         {
@@ -75,20 +91,31 @@ public partial class LookupFilter
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        base.OnParametersSet();
+        await base.OnParametersSetAsync();
 
-        if (Items == null)
+        var items = new List<SelectedItem>
         {
-            var items = new List<SelectedItem>
-            {
-                new("", Localizer["EnumFilter.AllText"].Value)
-            };
+            new("", Localizer["EnumFilter.AllText"].Value)
+        };
+        if (Lookup != null)
+        {
             items.AddRange(Lookup);
-            Items = items;
         }
+        else if (!string.IsNullOrEmpty(LookupServiceKey))
+        {
+            var lookupService = GetLookupService();
+            var lookup = await lookupService.GetItemsAsync(LookupServiceKey, LookupServiceData);
+            if (lookup != null)
+            {
+                items.AddRange(lookup);
+            }
+        }
+        Items = items;
     }
+
+    private ILookupService GetLookupService() => LookupService ?? InjectLookupService;
 
     /// <summary>
     /// <inheritdoc/>

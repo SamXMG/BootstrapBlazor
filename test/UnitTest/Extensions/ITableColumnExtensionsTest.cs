@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace UnitTest.Extensions;
 
@@ -52,6 +53,7 @@ public class ITableColumnExtensionsTest
             Lookup = new List<SelectedItem>(),
             LookupStringComparison = StringComparison.Ordinal,
             LookupServiceKey = "test-key",
+            LookupService = new LookupService(),
             LookupServiceData = true,
             IsReadonlyWhenAdd = true,
             IsReadonlyWhenEdit = true,
@@ -175,6 +177,10 @@ public class ITableColumnExtensionsTest
         Assert.True(col.IsRequiredWhenEdit);
         Assert.True(col.IsRequiredWhenAdd);
         Assert.Equal("test", col.RequiredErrorMessage);
+
+        Assert.NotNull(col.LookupService);
+        Assert.Equal("test-key", col.LookupServiceKey);
+        Assert.Equal(true, col.LookupServiceData);
     }
 
     [Fact]
@@ -225,5 +231,10 @@ public class ITableColumnExtensionsTest
         Assert.Equal(2, filters.Count(f => f.GetFilterConditions().FieldValue?.GetType() == typeof(float)));
         Assert.Equal(2, filters.Count(f => f.GetFilterConditions().FieldValue?.GetType() == typeof(double)));
         Assert.Equal(2, filters.Count(f => f.GetFilterConditions().FieldValue?.GetType() == typeof(decimal)));
+    }
+
+    class LookupService : LookupServiceBase
+    {
+        public override IEnumerable<SelectedItem>? GetItemsByKey(string? key, object? data) => null;
     }
 }

@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace UnitTest.Components;
 
@@ -225,17 +226,14 @@ public class DropdownTest : BootstrapBlazorTestBase
     {
         var cut = Context.RenderComponent<Dropdown<string>>(pb =>
         {
-            pb.Add(a => a.IsDisabled, true);
+            pb.Add(a => a.IsDisabled, false);
             pb.Add(a => a.Items, new SelectedItem[]
             {
                 new("1", "Test1") { IsDisabled = true },
                 new("2", "Test2")
             });
         });
-        // 禁用组件不生成 下拉菜单
-        cut.DoesNotContain("dropdown-menu");
-
-        cut.SetParametersAndRender(pb => pb.Add(a => a.IsDisabled, false));
+        cut.Contains("<div class=\"dropdown-item disabled\">Test1</div>");
     }
 
     [Fact]

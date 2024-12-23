@@ -37,6 +37,9 @@ $bb-avatar-icon-font-size: 1.4rem;
 // Badge
 $bb-badge-color: #212529;
 
+// BootstrapIcon
+$bb-icon-width: 12px;
+
 // Button
 $bs-btn-font-size: .875rem;
 $bs-btn-focus-box-shadow: none;
@@ -273,11 +276,11 @@ $bb-flip-clock-number-line-bg: rgba(0,0,0,.4);
 $bb-flip-clock-number-line-height: 1px;
 
 // FileIcon
-$bb-icon-width: 42px;
-$bb-icon-height: auto;
-$bb-icon-padding-left: .5rem;
-$bb-icon-badge-bottom: 7px;
-$bb-icon-path-fill-color: #495057;
+$bb-file-icon-width: 42px;
+$bb-file-icon-height: auto;
+$bb-file-icon-padding-left: .5rem;
+$bb-file-icon-badge-bottom: 7px;
+$bb-file-icon-path-fill-color: #495057;
 
 // Filter
 $bb-filter-item-min-width: 220px;
@@ -306,6 +309,9 @@ $bb-groupbox-legend-padding: 0 .5rem;
 $bb-groupbox-legend-left: 1rem;
 $bb-groupbox-legend-top: -10px;
 
+// Icon Svg
+$bb-svg-icon-width: 12px;
+
 // ImagePreviewer
 $bb-viewer-button-bg: #606266;
 $bb-viewer-border-radius: 50%;
@@ -315,9 +321,10 @@ $bb-ip-cell-max-width: 30px;
 
 // Layout
 $bb-layout-header-height: 50px;
-$bb-layout-header-background: var(--bs-body-bg);
-$bb-layout-header-color: var(--bs-body-color);
-$bb-layout-headerbar-background: var(--bb-header-bg);
+$bb-layout-header-background: #0078d4;
+$bb-layout-header-color: #fff;
+$bb-layout-header-border-color: #0078d4;
+$bb-layout-headerbar-background: #0078d4;
 $bb-layout-headerbar-border-color: var(--bs-border-color);
 $bb-layout-headerbar-padding: 4px 12px;
 $bb-layout-footer-background: var(--bs-body-bg);
@@ -325,13 +332,19 @@ $bb-layout-footer-color: var(--bs-body-color);
 $bb-layout-footer-height: 40px;
 $bb-layout-sidebar-width: 214px;
 $bb-layout-sidebar-collapse-width: 70px;
-$bb-layout-sidebar-banner-background: var(--bs-body-bg);
+$bb-layout-sidebar-banner-background: #0078d4;
 $bb-layout-sidebar-background: var(--bs-body-bg);
 $bb-layout-sidebar-color: var(--bs-body-color);
-$bb-layout-title-color: var(--bs-body-color);
+$bb-layout-title-color: #fff;
 $bb-layout-title-margin-left: .5rem;
 $bb-layout-banner-font-size: 1.5rem;
 $bb-layout-banner-logo-width: 42px;
+$bb-layout-banner-border-color: #0078d4;
+$bb-layout-menu-user-banner-background: #0078d4;
+$bb-layout-menu-user-border-color: #0069b9;
+$bb-layout-menu-item-hover-bg: #409eff;
+$bb-layout-logo-border-color: #d5d5d5;
+$bb-layout-logo-bg: #0e77e3;
 
 // Light
 $bb-light-bg: radial-gradient(circle, #fff, #aaa, #333);
@@ -436,7 +449,7 @@ $bb-rate-transition: .3s;
 // Ribbon Tab
 $bb-ribbon-menu-height: 30px;
 $bb-ribbon-menu-margin-top: 5px;
-$bb-ribbon-menu-body-height: 82.5px;
+$bb-ribbon-menu-body-height: 84.5px;
 $bb-ribbon-menu-body-padding: .5rem;
 $bb-ribbon-menu-radius: var(--bs-border-radius);
 $bb-ribbon-menu-padding: .5rem;
@@ -491,7 +504,8 @@ $bb-segmented-text-margin-left: 4px;
 // Select
 $bb-dropdown-link-pre-active-bg: #498ff7;
 $bb-select-focus-shadow: none;
-$bb-select-padding: 6px 2.25rem 6px 0.75rem;
+$bb-select-padding-right: 2.25rem;
+$bb-select-padding: 6px 0.75rem;
 $bb-select-search-padding: 7px 10px;
 $bb-select-search-margin-bottom: .5rem;
 $bb-select-search-border-color: var(--bs-border-color);
@@ -649,16 +663,17 @@ $bb-transfer-filter-focus-border-color: #409eff;
 $bb-transfer-filter-margin: .5rem;
 
 // TreeView
-$bb-tree-padding: 0;
+$bb-tree-padding: 0 .5rem;
 $bb-tree-margin: 0;
-$bb-tree-ul-padding-left: 20px;
+$bb-tree-padding-left: 20px;
 $bb-tree-item-margin: 1px 0;
 $bb-tree-icon-width: 22px;
-$bb-tree-check-margin: 0 4px;
+$bb-tree-check-margin: 0 0 0 .5rem;
 $bb-tree-node-padding: .25rem .5rem;
 $bb-tree-item-active-color: var(--bs-body-color);
-$bb-tree-item-active-bg: rgba(var(--bs-body-color-rgb),.08);
-$bb-tree-item-hover-bg: rgba(var(--bs-body-color-rgb),.12);
+$bb-tree-item-active-bg: rgba(var(--bs-body-color-rgb),.12);
+$bb-tree-item-hover-color: var(--bs-body-color);
+$bb-tree-item-hover-bg: rgba(var(--bs-body-color-rgb),.08);
 $bb-tree-icon-margin-right: .5rem;
 $bb-tree-search-height: 43px;
 $bb-tree-disabled-opacity: .5;

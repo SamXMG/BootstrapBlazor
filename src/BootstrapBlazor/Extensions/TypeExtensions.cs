@@ -1,20 +1,22 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace BootstrapBlazor.Components;
 
 internal static class TypeExtensions
 {
-    public static PropertyInfo? GetPropertyByName(this Type type, string propertyName) => type.GetRuntimeProperties().FirstOrDefault(p => p.Name == propertyName);
+    public static PropertyInfo? GetPropertyByName(this Type type, string propertyName) => CacheManager.GetRuntimeProperties(type).Find(p => p.Name == propertyName);
 
-    public static FieldInfo? GetFieldByName(this Type type, string fieldName) => type.GetRuntimeFields().FirstOrDefault(p => p.Name == fieldName);
+    public static FieldInfo? GetFieldByName(this Type type, string fieldName) => CacheManager.GetRuntimeFields(type).Find(p => p.Name == fieldName);
 
-    public static async Task<bool> IsAuthorizedAsync(this Type type, Task<AuthenticationState>? authenticateState, IAuthorizationPolicyProvider? authorizePolicy, IAuthorizationService? authorizeService, object? resource = null)
+    public static async Task<bool> IsAuthorizedAsync(this Type type, IServiceProvider serviceProvider, Task<AuthenticationState>? authenticateState, object? resource = null)
     {
         var ret = true;
         var authorizeData = AttributeAuthorizeDataCache.GetAuthorizeDataForType(type);
@@ -22,6 +24,8 @@ internal static class TypeExtensions
         {
             EnsureNoAuthenticationSchemeSpecified();
 
+            var authorizePolicy = serviceProvider.GetService<IAuthorizationPolicyProvider>();
+            var authorizeService = serviceProvider.GetService<IAuthorizationService>();
             if (authenticateState != null && authorizePolicy != null && authorizeService != null)
             {
                 var currentAuthenticationState = await authenticateState;

@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using System.Reflection;
 using System.Web;
@@ -47,6 +48,7 @@ public class DisplayTest : BootstrapBlazorTestBase
     {
         var cut = Context.RenderComponent<Display<List<string>>>(pb =>
         {
+            pb.Add(a => a.LookupService, null);
             pb.Add(a => a.LookupServiceKey, "FooLookup");
             pb.Add(a => a.LookupServiceData, true);
             pb.Add(a => a.Value, ["v1", "v2"]);
@@ -225,6 +227,14 @@ public class DisplayTest : BootstrapBlazorTestBase
         Assert.Contains("中学", cut.Markup);
     }
 
+    [Fact]
+    public void Format_Test()
+    {
+        var cut = Context.RenderComponent<MockComponent>();
+        var result = cut.Instance.Test(new SelectedItem("1", "Test"));
+        Assert.Equal("1", result);
+    }
+
     class DisplayGenericValueMock<T>
     {
         [NotNull]
@@ -243,6 +253,14 @@ public class DisplayTest : BootstrapBlazorTestBase
         public override string ToString()
         {
             return Value.ToString();
+        }
+    }
+
+    class MockComponent : DisplayBase<SelectedItem>
+    {
+        public string? Test(SelectedItem v)
+        {
+            return base.FormatValueAsString(v);
         }
     }
 }

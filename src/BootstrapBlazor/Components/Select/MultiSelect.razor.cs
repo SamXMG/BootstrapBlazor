@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Localization;
 using System.Collections;
@@ -34,6 +35,19 @@ public partial class MultiSelect<TValue>
     private string? PlaceHolderClassString => CssBuilder.Default("multi-select-ph")
         .AddClass("d-none", SelectedItems.Count != 0)
         .Build();
+
+    /// <summary>
+    /// 获得/设置 绑定数据集
+    /// </summary>
+    [Parameter]
+    [NotNull]
+    public IEnumerable<SelectedItem>? Items { get; set; }
+
+    /// <summary>
+    /// 获得/设置 选项模板
+    /// </summary>
+    [Parameter]
+    public RenderFragment<SelectedItem>? ItemTemplate { get; set; }
 
     /// <summary>
     /// 获得/设置 组件 PlaceHolder 文字 默认为 点击进行多选 ...
@@ -210,7 +224,7 @@ public partial class MultiSelect<TValue>
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    protected override string? FormatValueAsString(TValue value) => value == null
+    protected override string? FormatValueAsString(TValue? value) => value == null
         ? null
         : Utility.ConvertValueToString(value);
 

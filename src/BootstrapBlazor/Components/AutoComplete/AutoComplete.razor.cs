@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
@@ -17,14 +18,14 @@ public partial class AutoComplete
     /// <summary>
     /// 获得/设置 当前下拉框是否显示
     /// </summary>
-    private bool IsShown { get; set; }
+    private bool _isShown;
 
     /// <summary>
     /// 获得 组件样式
     /// </summary>
     protected virtual string? ClassString => CssBuilder.Default("auto-complete")
         .AddClass("is-loading", IsLoading)
-        .AddClass("show", IsShown && !IsPopover)
+        .AddClass("show", _isShown && !IsPopover)
         .Build();
 
     /// <summary>
@@ -143,12 +144,17 @@ public partial class AutoComplete
     }
 
     /// <summary>
-    /// OnBlur 方法
+    /// <inheritdoc/>
     /// </summary>
-    protected void OnBlur()
+    protected override async Task OnBlur()
     {
         CurrentSelectedItem = "";
-        IsShown = false;
+        _isShown = false;
+
+        if (OnBlurAsync != null)
+        {
+            await OnBlurAsync(Value);
+        }
     }
 
     /// <summary>
@@ -179,7 +185,12 @@ public partial class AutoComplete
             else
             {
                 FilterItems = DisplayCount == null ? Items.ToList() : Items.Take(DisplayCount.Value).ToList();
-                IsShown = true;
+                _isShown = true;
+
+                if (IsPopover)
+                {
+                    await InvokeVoidAsync("triggerFocus", Id);
+                }
             }
         }
     }
@@ -211,7 +222,7 @@ public partial class AutoComplete
             IsLoading = false;
         }
 
-        IsShown = true;
+        _isShown = true;
 
         var source = FilterItems;
         if (source.Count > 0)
@@ -239,13 +250,13 @@ public partial class AutoComplete
             }
             else if (key == "Escape")
             {
-                OnBlur();
+                await OnBlur();
                 if (!SkipEsc && OnEscAsync != null)
                 {
                     await OnEscAsync(Value);
                 }
             }
-            else if (key == "Enter")
+            else if (IsEnterKey(key))
             {
                 if (!string.IsNullOrEmpty(CurrentSelectedItem))
                 {
@@ -256,7 +267,7 @@ public partial class AutoComplete
                     }
                 }
 
-                OnBlur();
+                await OnBlur();
                 if (!SkipEnter && OnEnterAsync != null)
                 {
                     await OnEnterAsync(Value);
@@ -268,7 +279,7 @@ public partial class AutoComplete
     }
 
     /// <summary>
-    /// 
+    /// 自定义按键处理方法
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>

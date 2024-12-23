@@ -1,10 +1,12 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
 namespace UnitTest.Components;
@@ -12,7 +14,7 @@ namespace UnitTest.Components;
 public class SelectTest : BootstrapBlazorTestBase
 {
     [Fact]
-    public void OnSearchTextChanged_Null()
+    public async Task OnSearchTextChanged_Null()
     {
         var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
         {
@@ -28,12 +30,12 @@ public class SelectTest : BootstrapBlazorTestBase
         });
 
         var ctx = cut.FindComponent<Select<string>>();
-        ctx.InvokeAsync(async () =>
+        await ctx.InvokeAsync(async () =>
         {
             await ctx.Instance.ConfirmSelectedItem(0);
 
             // 搜索 T
-            ctx.Find(".search-text").Input("T");
+            await ctx.Instance.TriggerOnSearch("T");
             await ctx.Instance.ConfirmSelectedItem(0);
         });
 
@@ -42,9 +44,28 @@ public class SelectTest : BootstrapBlazorTestBase
             pb.Add(a => a.OnBeforeSelectedItemChange, item => Task.FromResult(false));
             pb.Add(a => a.OnSelectedItemChanged, item => Task.CompletedTask);
         });
-        ctx.InvokeAsync(() => ctx.Instance.ConfirmSelectedItem(0));
+        await ctx.InvokeAsync(() => ctx.Instance.ConfirmSelectedItem(0));
 
         ctx.Instance.ClearSearchText();
+
+        ctx.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.OnBeforeSelectedItemChange, null);
+            pb.Add(a => a.OnSelectedItemChanged, null);
+            pb.Add(a => a.OnSearchTextChanged, text =>
+            {
+                return new List<SelectedItem>()
+                {
+                    new("1", "Test1")
+                };
+            });
+        });
+
+        await ctx.InvokeAsync(async () =>
+        {
+            await ctx.Instance.TriggerOnSearch("T");
+        });
+        cut.DoesNotContain("Test2");
     }
 
     [Fact]
@@ -83,6 +104,18 @@ public class SelectTest : BootstrapBlazorTestBase
         });
         Assert.Contains("_input\" disabled=\"disabled\"", cut.Markup);
         Assert.Contains("dropdown-item active disabled", cut.Markup);
+    }
+
+    [Fact]
+    public void LookupService_Ok()
+    {
+        // 不给 Items 时走 LookupService
+        var cut = Context.RenderComponent<Select<string>>(pb =>
+        {
+            pb.Add(a => a.LookupServiceKey, "FooLookup");
+        });
+        cut.WaitForAssertion(() => cut.Contains("LookupService-Test-1"));
+        Assert.Equal(2, cut.Instance.Items.Count());
     }
 
     [Fact]
@@ -162,7 +195,7 @@ public class SelectTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void OnSelectedItemChanged_OK()
+    public async Task OnSelectedItemChanged_OK()
     {
         var triggered = false;
 
@@ -184,7 +217,7 @@ public class SelectTest : BootstrapBlazorTestBase
         Assert.False(triggered);
 
         // 切换候选项时触发 OnSelectedItemChanged 回调测试
-        cut.InvokeAsync(() =>
+        await cut.InvokeAsync(() =>
         {
             var items = cut.FindAll(".dropdown-item");
             var count = items.Count;
@@ -197,7 +230,7 @@ public class SelectTest : BootstrapBlazorTestBase
 
         // 切换回 空值 触发 OnSelectedItemChanged 回调测试
         triggered = false;
-        cut.InvokeAsync(() =>
+        await cut.InvokeAsync(() =>
         {
             var items = cut.FindAll(".dropdown-item");
             var item = items[0];
@@ -221,7 +254,7 @@ public class SelectTest : BootstrapBlazorTestBase
 
         // 切换回 空值 触发 OnSelectedItemChanged 回调测试
         triggered = false;
-        cut.InvokeAsync(() =>
+        await cut.InvokeAsync(() =>
         {
             var items = cut.FindAll(".dropdown-item");
             var count = items.Count;
@@ -402,7 +435,7 @@ public class SelectTest : BootstrapBlazorTestBase
                 new("2", "Text2"),
             });
             pb.Add(a => a.Value, v);
-            pb.Add(a => a.ValueChanged, EventCallback.Factory.Create<SelectedItem>(this, i => v = i));
+            pb.Add(a => a.ValueChanged, EventCallback.Factory.Create<SelectedItem?>(this, i => v = i));
         });
         Assert.Equal("2", cut.Instance.Value.Value);
 
@@ -642,7 +675,7 @@ public class SelectTest : BootstrapBlazorTestBase
         // 期望 UI 显示值为默认值
         // 期望 下拉框为全数据
         var input = cut.Find(".search-text");
-        await cut.InvokeAsync(() => input.Input("2"));
+        await cut.InvokeAsync(() => cut.Instance.TriggerOnSearch("2"));
 
         // 下拉框仅显示一个选项 Test2
         var items = cut.FindAll(".dropdown-item");
@@ -685,12 +718,8 @@ public class SelectTest : BootstrapBlazorTestBase
                 return Task.FromResult(new QueryData<SelectedItem>()
                 {
                     Items = string.IsNullOrEmpty(searchText)
-                        ? new SelectedItem[]
-                        {
-                            new("", "All"),
-                            new("1", "Test1"),
-                            new("2", "Test2")
-                        } : [new("2", "Test2")],
+                        ? [new("", "All"), new("1", "Test1"), new("2", "Test2")]
+                        : [new("2", "Test2")],
                     TotalCount = string.IsNullOrEmpty(searchText) ? 2 : 1
                 });
             });
@@ -704,7 +733,7 @@ public class SelectTest : BootstrapBlazorTestBase
         // 期望 UI 显示值为默认值
         // 期望 下拉框为全数据
         var input = cut.Find(".search-text");
-        await cut.InvokeAsync(() => input.Input("2"));
+        await cut.InvokeAsync(() => cut.Instance.TriggerOnSearch("2"));
 
         // 下拉框仅显示一个选项 Test2
         var items = cut.FindAll(".dropdown-item");
@@ -730,14 +759,14 @@ public class SelectTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void IsVirtualize_BindValue()
+    public async Task IsVirtualize_BindValue()
     {
         var value = new SelectedItem("3", "Test 3");
         var cut = Context.RenderComponent<Select<SelectedItem>>(pb =>
         {
             pb.Add(a => a.Value, value);
             pb.Add(a => a.IsVirtualize, true);
-            pb.Add(a => a.ValueChanged, EventCallback.Factory.Create<SelectedItem>(this, new Action<SelectedItem>(item =>
+            pb.Add(a => a.ValueChanged, EventCallback.Factory.Create<SelectedItem?>(this, new Action<SelectedItem?>(item =>
             {
                 value = item;
             })));
@@ -755,36 +784,33 @@ public class SelectTest : BootstrapBlazorTestBase
             });
         });
 
-        cut.InvokeAsync(() =>
-        {
-            var input = cut.Find(".form-select");
-            Assert.Equal("Test 3", input.GetAttribute("value"));
-        });
-        cut.Contains("Test 3");
+        var input = cut.Find(".form-select");
+        Assert.Equal("3", input.GetAttribute("value"));
+
         var select = cut.Instance;
         Assert.Equal("3", select.Value?.Value);
 
-        cut.InvokeAsync(() =>
+        var item = cut.Find(".dropdown-item");
+        await cut.InvokeAsync(() =>
         {
-            var item = cut.Find(".dropdown-item");
             item.Click();
-            Assert.Equal("1", value.Value);
-
-            var input = cut.Find(".form-select");
-            Assert.Equal("Test1", input.GetAttribute("value"));
         });
+        Assert.Equal("1", value.Value);
+
+        input = cut.Find(".form-select");
+        Assert.Equal("Test1", input.GetAttribute("value"));
     }
 
     [Fact]
     public void IsVirtualize_DefaultVirtualizeItemText()
     {
-        string value = "3";
+        string? value = "3";
         var cut = Context.RenderComponent<Select<string>>(pb =>
         {
             pb.Add(a => a.IsVirtualize, true);
             pb.Add(a => a.DefaultVirtualizeItemText, "Test 3");
             pb.Add(a => a.Value, value);
-            pb.Add(a => a.ValueChanged, EventCallback.Factory.Create<string>(this, new Action<string>(item =>
+            pb.Add(a => a.ValueChanged, EventCallback.Factory.Create<string?>(this, new Action<string?>(item =>
             {
                 value = item;
             })));
@@ -823,11 +849,11 @@ public class SelectTest : BootstrapBlazorTestBase
         });
         var select = cut.Instance;
         var mi = select.GetType().GetMethod("LoadItems", BindingFlags.NonPublic | BindingFlags.Instance);
-        mi?.Invoke(select, new object[] { new ItemsProviderRequest(0, 1, CancellationToken.None) });
+        mi?.Invoke(select, [new ItemsProviderRequest(0, 1, CancellationToken.None)]);
 
         var totalCountProperty = select.GetType().GetProperty("TotalCount", BindingFlags.NonPublic | BindingFlags.Instance);
         totalCountProperty?.SetValue(select, 2);
-        mi?.Invoke(select, new object[] { new ItemsProviderRequest(0, 1, CancellationToken.None) });
+        mi?.Invoke(select, [new ItemsProviderRequest(0, 1, CancellationToken.None)]);
     }
 
     [Fact]
@@ -953,5 +979,45 @@ public class SelectTest : BootstrapBlazorTestBase
         });
         await cut.Instance.Show();
         await cut.Instance.Hide();
+    }
+
+    [Fact]
+    public async Task OnBeforeSelectedItemChange_OK()
+    {
+        var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
+        {
+            pb.AddChildContent<Select<string>>(pb =>
+            {
+                pb.Add(a => a.Items, new List<SelectedItem>()
+                {
+                    new("1", "Test1"),
+                    new("2", "Test2") { IsDisabled = true }
+                });
+                pb.Add(a => a.SwalCategory, SwalCategory.Question);
+                pb.Add(a => a.SwalTitle, "Swal-Title");
+                pb.Add(a => a.SwalContent, "Swal-Content");
+                pb.Add(a => a.OnBeforeSelectedItemChange, item => Task.FromResult(true));
+                pb.Add(a => a.OnSelectedItemChanged, item => Task.CompletedTask);
+                pb.Add(a => a.SwalFooter, "test-swal-footer");
+            });
+        });
+        var modals = cut.FindComponents<Modal>();
+        var modal = modals[modals.Count - 1];
+        _ = Task.Run(() => cut.InvokeAsync(() => cut.FindComponent<Select<string>>().Instance.ConfirmSelectedItem(0)));
+        var tick = DateTime.Now;
+        while (!cut.Markup.Contains("test-swal-footer"))
+        {
+            Thread.Sleep(100);
+            if (DateTime.Now > tick.AddSeconds(2))
+            {
+                break;
+            }
+        }
+        var button = cut.Find(".btn-danger");
+        await cut.InvokeAsync(() =>
+        {
+            button.Click();
+        });
+        await cut.InvokeAsync(() => modal.Instance.CloseCallback());
     }
 }

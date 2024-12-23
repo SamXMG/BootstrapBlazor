@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using System.ComponentModel.DataAnnotations;
 
@@ -58,44 +59,45 @@ class TreeFoo
         return CascadingTree(items);
     }
 
+    public static List<TreeViewItem<TreeFoo>> GetVirtualizeTreeItems()
+    {
+        var ret = new List<TreeViewItem<TreeFoo>>();
+        Enumerable.Range(1, 100).ToList().ForEach(i =>
+        {
+            ret.Add(new TreeViewItem<TreeFoo>(new TreeFoo() { Id = $"{i}" })
+            {
+                Text = $"Root{i}",
+                HasChildren = true
+            });
+        });
+        return ret;
+    }
+
     /// <summary>
     /// TreeFoo 带选择框树状数据集
     /// </summary>
     /// <returns></returns>
     public static List<TreeViewItem<TreeFoo>> GetCheckedTreeItems(string? parentId = null)
     {
-        return [
-            new(new TreeFoo()
-            {
-                Id = $"{parentId}-101",
-                ParentId=parentId
-            })
-            {
-                Text = "navigation one",
-                HasChildren = true
-            },
-            new(new TreeFoo()
-            {
-                Id = $"{parentId}-102",
-                ParentId=parentId
-            })
-            {
-                Text = "navigation two",
-                CheckedState = CheckboxState.Checked
-            }
-        ];
+        var node1 = new TreeViewItem<TreeFoo>(new TreeFoo() { Id = $"{parentId}-101", ParentId = parentId })
+        {
+            Text = "navigation one", HasChildren = true
+        };
+        var node2 = new TreeViewItem<TreeFoo>(new TreeFoo() { Id = $"{parentId}-102", ParentId = parentId })
+        {
+            Text = "navigation two", CheckedState = CheckboxState.Checked
+        };
+        return [node1, node2];
     }
 
     /// <summary>
     /// 树状数据层次化方法
     /// </summary>
     /// <param name="items">数据集合</param>
-    public static List<TreeViewItem<TreeFoo>> CascadingTree(IEnumerable<TreeFoo> items) => items.CascadingTree(null,
-        (foo, parent) => foo.ParentId == parent?.Value.Id,
-        foo => new TreeViewItem<TreeFoo>(foo)
-        {
-            Text = foo.Text,
-            Icon = foo.Icon,
-            IsActive = foo.IsActive
-        });
+    public static List<TreeViewItem<TreeFoo>> CascadingTree(IEnumerable<TreeFoo> items) => items.CascadingTree(null, (foo, parent) => foo.ParentId == parent?.Value.Id, foo => new TreeViewItem<TreeFoo>(foo)
+    {
+        Text = foo.Text,
+        Icon = foo.Icon,
+        IsActive = foo.IsActive
+    });
 }

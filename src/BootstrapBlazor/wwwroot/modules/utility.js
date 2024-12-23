@@ -716,7 +716,9 @@ export function getTheme() {
 }
 
 export function saveTheme(theme) {
-    localStorage.setItem('theme', theme)
+    if (localStorage) {
+        localStorage.setItem('theme', theme);
+    }
 }
 
 export function getAutoThemeValue() {
@@ -787,6 +789,10 @@ const deepMerge = (obj1, obj2) => {
         }
     }
     return obj1;
+}
+
+export function setTitle(title) {
+    document.title = title;
 }
 
 export {

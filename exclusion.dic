@@ -10,6 +10,7 @@ cors
 dest
 dissubmit
 dropup
+dropzone
 editform
 ellips
 fullscreen
@@ -57,6 +58,7 @@ Segmenteds
 Responsives
 resx
 tabset
+tabindex
 Splittings
 Foos
 Localizer
@@ -67,12 +69,12 @@ Goto
 elec
 ahora
 Nuget
-lastest
 bootstrapblazor
 layui
 devui
 appsettings
 cshtml
+csharp
 Starup
 args
 nameof
@@ -101,3 +103,9 @@ vimeo
 scrlang
 Validata
 Validatable
+noselect
+Urls
+Pharmacode
+bluetooth
+iframe
+Sqlite

@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Localization;
 
@@ -44,9 +45,7 @@ public partial class Cascader<TValue>
     /// </summary>
     [Parameter]
     [NotNull]
-#if NET6_0_OR_GREATER
     [EditorRequired]
-#endif
     public IEnumerable<CascaderItem>? Items { get; set; }
 
     /// <summary>
@@ -78,6 +77,12 @@ public partial class Cascader<TValue>
     /// </summary>
     [Parameter]
     public string? SubMenuIcon { get; set; }
+
+    /// <summary>
+    /// 获得/设置 失去焦点回调方法 默认 null
+    /// </summary>
+    [Parameter]
+    public Func<TValue, Task>? OnBlurAsync { get; set; }
 
     [Inject]
     [NotNull]
@@ -111,6 +116,17 @@ public partial class Cascader<TValue>
         {
             _lastValue = CurrentValueAsString;
             SetDefaultValue(CurrentValueAsString);
+        }
+    }
+
+    /// <summary>
+    /// 失去焦点时回调方法
+    /// </summary>
+    private async Task OnBlur()
+    {
+        if (OnBlurAsync != null)
+        {
+            await OnBlurAsync(Value);
         }
     }
 

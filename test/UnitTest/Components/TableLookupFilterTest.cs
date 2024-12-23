@@ -1,11 +1,37 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace UnitTest.Components;
 
 public class TableLookupFilterTest : BootstrapBlazorTestBase
 {
+    [Fact]
+    public void Lookup_Ok()
+    {
+        var cut = Context.RenderComponent<LookupFilter>(pb =>
+        {
+            pb.Add(a => a.Type, typeof(string));
+            pb.Add(a => a.LookupServiceKey, "FooLookup");
+        });
+        var items = cut.FindAll(".dropdown-item");
+        Assert.Equal(3, items.Count);
+        Assert.Contains("LookupService-Test-2", items[items.Count - 1].InnerHtml);
+
+        var lookupService = Context.Services.GetKeyedService<ILookupService>("FooLookupAsync");
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.LookupService, lookupService);
+        });
+        cut.WaitForAssertion(() =>
+        {
+            items = cut.FindAll(".dropdown-item");
+            Assert.Equal(3, items.Count);
+            Assert.Contains("LookupService-Test-2-async", items[items.Count - 1].InnerHtml);
+        });
+    }
+
     [Fact]
     public void Reset_Ok()
     {

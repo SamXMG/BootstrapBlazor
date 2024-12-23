@@ -1,6 +1,7 @@
 ﻿@page "/select"
 @inject DialogService Dialog
 @inject IStringLocalizer<Selects> Localizer
+@inject IOptionsMonitor<WebsiteOptions> WebsiteOption
 
 <h3>@Localizer["SelectsTitle"]</h3>
 
@@ -289,7 +290,7 @@
                         </div>
                         <Divider />
                         <div class="select-custom-body">
-                            <img src="@Foo.GetAvatarUrl(foo.Id)" class="bb-avatar" />
+                            <img src="@WebsiteOption.CurrentValue.GetAvatarUrl(foo.Id)" class="bb-avatar" />
                             <div class="select-custom-detail">
                                 <div class="d-flex">
                                     <div class="flex-fill">
@@ -386,9 +387,10 @@
 </DemoBlock>
 
 <DemoBlock Title="@Localizer["SelectsIsEditableTitle"]" Introduction="@Localizer["SelectsIsEditableIntro"]" Name="IsEditable">
+    <section ignore>@((MarkupString)Localizer["SelectsIsEditableDesc"].Value)</section>
     <div class="row">
         <div class="col-12 col-sm-6">
-            <Select TValue="string" Color="Color.Primary" Items="Items" IsEditable="true"></Select>
+            <Select TValue="string" Color="Color.Primary" Items="Items" IsEditable="true" OnInputChangedCallback="OnInputChangedCallback"></Select>
         </div>
     </div>
 </DemoBlock>
@@ -396,7 +398,7 @@
 <DemoBlock Title="@Localizer["SelectsVirtualizeTitle"]"
            Introduction="@Localizer["SelectsVirtualizeIntro"]"
            Name="IsVirtualize">
-    <p>@((MarkupString)Localizer["SelectsVirtualizeDescription"].Value)</p>
+    <section ignore>@((MarkupString)Localizer["SelectsVirtualizeDescription"].Value)</section>
 
     <div class="row mb-3">
         <div class="col-12 col-sm-6">

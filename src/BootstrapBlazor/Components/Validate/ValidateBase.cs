@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Localization;
@@ -60,7 +61,7 @@ public abstract class ValidateBase<TValue> : DisplayBase<TValue>, IValidateCompo
     /// <summary>
     /// Gets or sets the current value of the input.
     /// </summary>
-    protected TValue CurrentValue
+    protected TValue? CurrentValue
     {
         get => Value;
         set
@@ -149,7 +150,7 @@ public abstract class ValidateBase<TValue> : DisplayBase<TValue>, IValidateCompo
     /// 获得/设置 Value 改变时回调方法
     /// </summary>
     [Parameter]
-    public Func<TValue, Task>? OnValueChanged { get; set; }
+    public Func<TValue?, Task>? OnValueChanged { get; set; }
 
     /// <summary>
     /// 获得/设置 类型转化失败格式化字符串 默认为 null
@@ -301,6 +302,7 @@ public abstract class ValidateBase<TValue> : DisplayBase<TValue>, IValidateCompo
 
         if (ValidateForm != null)
         {
+            // IValidateCollection 支持组件间联动验证
             var fieldName = FieldIdentifier?.FieldName;
             if (!string.IsNullOrEmpty(fieldName))
             {

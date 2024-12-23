@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Localization;
 
@@ -92,9 +93,7 @@ public partial class TableFilter : IFilter
     /// </summary>
     [Parameter]
     [NotNull]
-#if NET6_0_OR_GREATER
     [EditorRequired]
-#endif
     public ITableColumn? Column { get; set; }
 
     /// <summary>
@@ -131,19 +130,10 @@ public partial class TableFilter : IFilter
     [NotNull]
     private IIconTheme? IconTheme { get; set; }
 
-    [Inject]
-    [NotNull]
-    private ILookupService? LookupService { get; set; }
-
     /// <summary>
     /// 组件步长
     /// </summary>
     private string? _step;
-
-    /// <summary>
-    /// 外键数据源集合
-    /// </summary>
-    private Lazy<IEnumerable<SelectedItem>?> _lookup = default!;
 
     /// <summary>
     /// <inheritdoc/>
@@ -155,8 +145,6 @@ public partial class TableFilter : IFilter
         _title = Column.GetDisplayName();
         FieldKey = Column.GetFieldName();
         Column.Filter = this;
-
-        _lookup = new(() => Column.Lookup ?? LookupService.GetItemsByKey(Column.LookupServiceKey, Column.LookupServiceData));
         _step = Column.Step;
     }
 
@@ -268,6 +256,4 @@ public partial class TableFilter : IFilter
             _count--;
         }
     }
-
-    private bool IsLookup => Column.Lookup != null || !string.IsNullOrEmpty(Column.LookupServiceKey);
 }

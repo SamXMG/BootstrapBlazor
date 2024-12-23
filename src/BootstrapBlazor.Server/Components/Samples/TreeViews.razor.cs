@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
@@ -24,27 +25,29 @@ public sealed partial class TreeViews
     private bool DisableCanExpand { get; set; }
     private bool IsDisabled { get; set; }
 
-    private List<TreeViewItem<TreeFoo>> Items { get; set; } = TreeFoo.GetTreeItems();
+    private List<TreeViewItem<TreeFoo>> Items { get; } = TreeFoo.GetTreeItems();
 
     private bool AutoCheckChildren { get; set; }
 
     private bool AutoCheckParent { get; set; }
 
-    private List<TreeViewItem<TreeFoo>> DisabledItems { get; set; } = GetDisabledItems();
+    private List<TreeViewItem<TreeFoo>> DisabledItems { get; } = GetDisabledItems();
 
-    private List<TreeViewItem<TreeFoo>> ExpandItems { get; set; } = GetExpandItems();
+    private List<TreeViewItem<TreeFoo>> ExpandItems { get; } = GetExpandItems();
 
     private List<TreeViewItem<TreeFoo>> CheckedItems { get; set; } = GetCheckedItems();
 
     private static List<TreeViewItem<TreeFoo>> GetIconItems() => TreeFoo.GetTreeItems();
 
-    private List<TreeViewItem<TreeFoo>> GetClickExpandItems { get; set; } = TreeFoo.GetTreeItems();
+    private List<TreeViewItem<TreeFoo>> GetClickExpandItems { get; } = TreeFoo.GetTreeItems();
 
-    private List<TreeViewItem<TreeFoo>> GetFormItems { get; set; } = TreeFoo.GetTreeItems();
+    private List<TreeViewItem<TreeFoo>> GetFormItems { get; } = TreeFoo.GetTreeItems();
 
-    private List<TreeViewItem<TreeFoo>> CheckedItems2 { get; set; } = TreeFoo.GetTreeItems();
+    private List<TreeViewItem<TreeFoo>> CheckedItems2 { get; } = TreeFoo.GetTreeItems();
 
-    private List<SelectedItem> SelectedItems { get; set; } = TreeFoo.GetItems().Select(x => new SelectedItem(x.Id, x.Text)).ToList();
+    private List<TreeViewItem<TreeFoo>> KeyboardItems { get; } = TreeFoo.GetTreeItems();
+
+    private List<SelectedItem> SelectedItems { get; } = TreeFoo.GetItems().Select(x => new SelectedItem(x.Id, x.Text)).ToList();
 
     private TreeView<TreeFoo>? SetActiveTreeView { get; set; }
 
@@ -52,11 +55,22 @@ public sealed partial class TreeViews
 
     private List<TreeViewItem<TreeFoo>>? SearchItems { get; set; } = TreeFoo.GetTreeItems();
 
+    private List<TreeViewItem<TreeFoo>> VirtualizeItems { get; } = TreeFoo.GetVirtualizeTreeItems();
+
     private Foo Model => Foo.Generate(LocalizerFoo);
+
+    private string? _selectedValue;
 
     private Task OnTreeItemClick(TreeViewItem<TreeFoo> item)
     {
         Logger1.Log($"TreeItem: {item.Text} clicked");
+        return Task.CompletedTask;
+    }
+
+    private Task OnTreeItemKeyboardClick(TreeViewItem<TreeFoo> item)
+    {
+        _selectedValue = item.Value.Text;
+        StateHasChanged();
         return Task.CompletedTask;
     }
 
@@ -217,6 +231,18 @@ public sealed partial class TreeViews
         return Task.CompletedTask;
     }
 
+    private static async Task<IEnumerable<TreeViewItem<TreeFoo>>> OnExpandVirtualNodeAsync(TreeViewItem<TreeFoo> node)
+    {
+        await Task.Delay(500);
+        var items = new List<TreeViewItem<TreeFoo>>();
+        Enumerable.Range(1, 1000).ToList().ForEach(i =>
+        {
+            var text = $"{node.Text}-{i}";
+            items.Add(new TreeViewItem<TreeFoo>(new TreeFoo() { Text = text }) { Text = text, HasChildren = Random.Shared.Next(100) > 80 });
+        });
+        return items;
+    }
+
     private class CustomerTreeItem : ComponentBase
     {
         [Inject]
@@ -329,6 +355,14 @@ public sealed partial class TreeViews
         },
         new()
         {
+            Name = nameof(TreeView<string>.IsVirtualize),
+            Description = "Virtualize",
+            Type = "bool",
+            ValueList = "true|false",
+            DefaultValue = "false"
+        },
+        new()
+        {
             Name = nameof(TreeView<string>.CanExpandWhenDisabled),
             Description = "Whether to expand when the control node is disabled",
             Type = "bool",
@@ -415,14 +449,6 @@ public sealed partial class TreeViews
         {
             Name = nameof(TreeViewItem<TreeFoo>.HasChildren),
             Description = "Whether there are child nodes",
-            Type = "bool",
-            ValueList = " true|false ",
-            DefaultValue = " false "
-        },
-        new()
-        {
-            Name = nameof(TreeViewItem<TreeFoo>.ShowLoading),
-            Description = "Whether to show child node loading animation",
             Type = "bool",
             ValueList = " true|false ",
             DefaultValue = " false "

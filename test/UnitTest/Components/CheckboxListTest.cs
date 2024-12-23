@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Localization;
 
@@ -27,19 +28,28 @@ public class CheckboxListTest : BootstrapBlazorTestBase
     }
 
     [Fact]
+    public void StopPropagation_Ok()
+    {
+        var cut = Context.RenderComponent<Checkbox<string>>(builder =>
+        {
+            builder.Add(a => a.StopPropagation, true);
+        });
+        Assert.Contains("blazor:onclick:stopPropagation", cut.Markup);
+    }
+
+    [Fact]
     public void ShowAfterLabel_Ok()
     {
         var cut = Context.RenderComponent<Checkbox<string>>(builder =>
         {
             builder.Add(a => a.ShowAfterLabel, true);
-            builder.Add(a => a.DisplayText, "Test");
         });
-        var label = cut.Find("label");
-        label.MarkupMatches("<label class=\"form-check-label\" diff:ignore>Test</label>");
+        cut.MarkupMatches("<div class=\"form-check\"><input class=\"form-check-input\" type=\"checkbox\" diff:ignore /></div>");
 
         cut.SetParametersAndRender(pb =>
         {
             pb.Add(a => a.ShowLabelTooltip, true);
+            pb.Add(a => a.DisplayText, "Test");
         });
 
         var span = cut.Find("span");
@@ -59,12 +69,26 @@ public class CheckboxListTest : BootstrapBlazorTestBase
         });
         Assert.False(cut.Instance.Value);
 
-        await cut.InvokeAsync(cut.Instance.TriggerOnBeforeStateChanged);
+        await cut.InvokeAsync(cut.Instance.OnToggleClick);
         Assert.True(cut.Instance.Value);
 
         confirm = false;
-        await cut.InvokeAsync(cut.Instance.TriggerOnBeforeStateChanged);
+        await cut.InvokeAsync(cut.Instance.OnToggleClick);
         Assert.True(cut.Instance.Value);
+    }
+
+    [Fact]
+    public async Task Checkbox_OnTriggerClickAsync()
+    {
+        var cut = Context.RenderComponent<Checkbox<bool>>();
+        Assert.False(cut.Instance.Value);
+
+        // JavaScript 调用 OnStateChangedAsync 方法
+        await cut.Instance.OnStateChangedAsync(CheckboxState.UnChecked);
+        Assert.Equal(CheckboxState.UnChecked, cut.Instance.State);
+
+        await cut.Instance.OnStateChangedAsync(CheckboxState.Checked);
+        Assert.Equal(CheckboxState.Checked, cut.Instance.State);
     }
 
     [Fact]
@@ -81,7 +105,7 @@ public class CheckboxListTest : BootstrapBlazorTestBase
 
         var methodInfo = checkbox.GetType().GetMethod("DisposeAsync", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
         Assert.NotNull(methodInfo);
-        methodInfo.Invoke(checkbox, new object[] { false });
+        methodInfo.Invoke(checkbox, [false]);
     }
 
     [Fact]
@@ -116,9 +140,17 @@ public class CheckboxListTest : BootstrapBlazorTestBase
                 pb.Add(a => a.Value, foo.Hobby);
                 pb.Add(a => a.ValueExpression, foo.GenerateValueExpression(nameof(foo.Hobby), typeof(IEnumerable<string>)));
             });
+            builder.AddChildContent<Checkbox<bool>>(pb =>
+            {
+                pb.Add(a => a.ShowLabel, false);
+                pb.Add(a => a.ShowAfterLabel, true);
+                pb.Add(a => a.Value, foo.Complete);
+                pb.Add(a => a.ValueExpression, foo.GenerateValueExpression(nameof(foo.Complete), typeof(bool)));
+            });
         });
         // 断言生成 CheckboxList
         Assert.Contains("form-check is-label", cut.Markup);
+        cut.Contains("是/否");
 
         // 提交表单触发客户端验证
         var form = cut.Find("form");
@@ -200,7 +232,7 @@ public class CheckboxListTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void StringValue_Ok()
+    public async Task StringValue_Ok()
     {
         var cut = Context.RenderComponent<CheckboxList<string>>(builder =>
         {
@@ -228,13 +260,13 @@ public class CheckboxListTest : BootstrapBlazorTestBase
             });
         });
         // 字符串值选中事件
-        var item = cut.Find(".form-check-input");
-        item.Click();
+        var item = cut.FindComponent<Checkbox<bool>>();
+        await cut.InvokeAsync(item.Instance.OnToggleClick);
         Assert.True(selected);
     }
 
     [Fact]
-    public void OnSelectedChanged_Ok()
+    public async Task OnSelectedChanged_Ok()
     {
         var selected = false;
         var foo = Foo.Generate(Localizer);
@@ -249,8 +281,8 @@ public class CheckboxListTest : BootstrapBlazorTestBase
             });
         });
 
-        var item = cut.Find(".form-check-input");
-        item.Click();
+        var item = cut.FindComponent<Checkbox<bool>>();
+        await cut.InvokeAsync(item.Instance.OnToggleClick);
         Assert.True(selected);
     }
 
@@ -266,7 +298,7 @@ public class CheckboxListTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void IntValue_Ok()
+    public async Task IntValue_Ok()
     {
         var ret = new List<int>();
         var selectedIntValues = new List<int> { 1, 2 };
@@ -284,8 +316,8 @@ public class CheckboxListTest : BootstrapBlazorTestBase
                 return Task.CompletedTask;
             });
         });
-        var item = cut.Find(".form-check-input");
-        item.Click();
+        var item = cut.FindComponent<Checkbox<bool>>();
+        await cut.InvokeAsync(item.Instance.OnToggleClick);
 
         // 选中 2 
         Assert.Equal(2, ret.First());
@@ -379,20 +411,20 @@ public class CheckboxListTest : BootstrapBlazorTestBase
 
         await cut.InvokeAsync(async () =>
         {
-            await checkboxes[0].Instance.TriggerOnBeforeStateChanged();
+            await checkboxes[0].Instance.OnToggleClick();
         });
         Assert.Equal(CheckboxState.Checked, checkboxes[0].Instance.State);
 
         await cut.InvokeAsync(async () =>
         {
-            await checkboxes[1].Instance.TriggerOnBeforeStateChanged();
+            await checkboxes[1].Instance.OnToggleClick();
         });
         Assert.Equal(CheckboxState.Checked, checkboxes[1].Instance.State);
 
         // 选中第三个由于限制无法选中
         await cut.InvokeAsync(async () =>
         {
-            await checkboxes[2].Instance.TriggerOnBeforeStateChanged();
+            await checkboxes[2].Instance.OnToggleClick();
         });
         Assert.Equal(CheckboxState.Checked, checkboxes[0].Instance.State);
         Assert.Equal(CheckboxState.Checked, checkboxes[1].Instance.State);
@@ -403,7 +435,7 @@ public class CheckboxListTest : BootstrapBlazorTestBase
         max = false;
         await cut.InvokeAsync(async () =>
         {
-            await checkboxes[0].Instance.TriggerOnBeforeStateChanged();
+            await checkboxes[0].Instance.OnToggleClick();
         });
         Assert.Equal(CheckboxState.UnChecked, checkboxes[0].Instance.State);
         Assert.Equal(CheckboxState.Checked, checkboxes[1].Instance.State);

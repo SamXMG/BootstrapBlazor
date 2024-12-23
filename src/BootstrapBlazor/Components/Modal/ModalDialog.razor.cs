@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Localization;
 
@@ -23,6 +24,7 @@ public partial class ModalDialog : IHandlerException
         .AddClass("modal-dialog-scrollable", IsScrolling)
         .AddClass("modal-fullscreen", MaximizeStatus)
         .AddClass("is-draggable", IsDraggable)
+        .AddClass("is-draggable-center", IsCentered && IsDraggable && _firstRender)
         .AddClass("d-none", !IsShown)
         .AddClass(Class, !string.IsNullOrEmpty(Class))
         .Build();
@@ -51,13 +53,13 @@ public partial class ModalDialog : IHandlerException
     public bool ShowResize { get; set; }
 
     /// <summary>
-    /// 获得/设置 弹窗大小
+    /// 获得/设置 弹窗大小 默认为 <see cref="Size.ExtraExtraLarge"/>
     /// </summary>
     [Parameter]
     public Size Size { get; set; } = Size.ExtraExtraLarge;
 
     /// <summary>
-    /// 获得/设置 弹窗大小
+    /// 获得/设置 弹窗大小 默认为 <see cref="FullScreenSize.None"/>
     /// </summary>
     [Parameter]
     public FullScreenSize FullScreenSize { get; set; }
@@ -66,10 +68,10 @@ public partial class ModalDialog : IHandlerException
     /// 获得/设置 是否垂直居中 默认为 true
     /// </summary>
     [Parameter]
-    public bool IsCentered { get; set; }
+    public bool IsCentered { get; set; } = true;
 
     /// <summary>
-    /// 获得/设置 是否弹窗正文超长时滚动
+    /// 获得/设置 是否弹窗正文超长时滚动 默认为 false
     /// </summary>
     [Parameter]
     public bool IsScrolling { get; set; }
@@ -81,7 +83,7 @@ public partial class ModalDialog : IHandlerException
     public bool IsDraggable { get; set; }
 
     /// <summary>
-    /// 获得/设置 是否显示最大化按钮
+    /// 获得/设置 是否显示最大化按钮 默认为 false
     /// </summary>
     [Parameter]
     public bool ShowMaximizeButton { get; set; }
@@ -289,6 +291,8 @@ public partial class ModalDialog : IHandlerException
 
     private DialogResult _result = DialogResult.Close;
 
+    private bool _firstRender = true;
+
     /// <summary>
     /// OnInitialized 方法
     /// </summary>
@@ -325,6 +329,20 @@ public partial class ModalDialog : IHandlerException
         ExportPdfButtonOptions.Icon ??= IconTheme.GetIconByKey(ComponentIcons.TableExportPdfIcon);
 
         MaximizeIconString = MaximizeWindowIcon;
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <param name="firstRender"></param>
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+
+        if (firstRender)
+        {
+            _firstRender = false;
+        }
     }
 
     /// <summary>

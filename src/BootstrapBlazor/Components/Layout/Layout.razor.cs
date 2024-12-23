@@ -1,8 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
@@ -66,19 +66,19 @@ public partial class Layout : IHandlerException
     public RenderFragment? Side { get; set; }
 
     /// <summary>
-    /// 获得/设置 NotAuthorized 模板
+    /// 获得/设置 NotAuthorized 模板 默认 null NET6.0/7.0 有效
     /// </summary>
     [Parameter]
     public RenderFragment? NotAuthorized { get; set; }
 
     /// <summary>
-    /// 获得/设置 NotFound 模板
+    /// 获得/设置 NotFound 模板 默认 null NET6.0/7.0 有效
     /// </summary>
     [Parameter]
     public RenderFragment? NotFound { get; set; }
 
     /// <summary>
-    /// 获得/设置 NotFound 标签文本
+    /// 获得/设置 NotFound 标签文本 默认 null NET6.0/7.0 有效
     /// </summary>
     [Parameter]
     [NotNull]
@@ -104,8 +104,9 @@ public partial class Layout : IHandlerException
     public bool IsFullSide { get; set; }
 
     /// <summary>
-    /// 获得/设置 是否为正页面布局 默认为 false
+    /// 获得/设置 是否为整页面布局 默认为 false
     /// </summary>
+    /// <remarks>为真时增加 is-page 样式</remarks>
     [Parameter]
     public bool IsPage { get; set; }
 
@@ -120,6 +121,12 @@ public partial class Layout : IHandlerException
     /// </summary>
     [Parameter]
     public bool UseTabSet { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否固定多标签 Header 默认 false
+    /// </summary>
+    [Parameter]
+    public bool IsFixedTabHeader { get; set; }
 
     /// <summary>
     /// 获得/设置 是否仅渲染 Active 标签
@@ -182,6 +189,24 @@ public partial class Layout : IHandlerException
     public string TabDefaultUrl { get; set; } = "";
 
     /// <summary>
+    /// 获得/设置 标签是否显示关闭按钮 默认 true
+    /// </summary>
+    [Parameter]
+    public bool ShowTabItemClose { get; set; } = true;
+
+    /// <summary>
+    /// 获得/设置 标签是否显示扩展按钮 默认 true
+    /// </summary>
+    [Parameter]
+    public bool ShowTabExtendButtons { get; set; } = true;
+
+    /// <summary>
+    /// 获得/设置 点击标签页是否切换地址栏 默认 true
+    /// </summary>
+    [Parameter]
+    public bool ClickTabToNavigation { get; set; } = true;
+
+    /// <summary>
     /// 获得/设置 授权回调方法多用于权限控制
     /// </summary>
     [Parameter]
@@ -213,8 +238,10 @@ public partial class Layout : IHandlerException
     /// </summary>
     private string? ClassString => CssBuilder.Default("layout")
         .AddClass("has-sidebar", Side != null && IsFullSide)
-        .AddClass("is-page", IsPage)
         .AddClass("has-footer", ShowFooter && Footer != null)
+        .AddClass("is-collapsed", IsCollapsed)
+        .AddClass("is-fixed-tab", IsFixedTabHeader && UseTabSet)
+        .AddClass("is-page", IsPage)
         .AddClassFromAttributes(AdditionalAttributes)
         .Build();
 
@@ -229,7 +256,6 @@ public partial class Layout : IHandlerException
     /// </summary>
     private string? FooterClassString => CssBuilder.Default("layout-footer")
         .AddClass("is-fixed", IsFixedFooter)
-        .AddClass("is-collapsed", IsCollapsed)
         .Build();
 
     /// <summary>
@@ -243,7 +269,6 @@ public partial class Layout : IHandlerException
     /// 获得 侧边栏样式
     /// </summary>
     private string? SideClassString => CssBuilder.Default("layout-side")
-        .AddClass("is-collapsed", IsCollapsed)
         .AddClass("is-fixed-header", IsFixedHeader)
         .AddClass("is-fixed-footer", IsFixedFooter)
         .Build();
@@ -252,21 +277,7 @@ public partial class Layout : IHandlerException
     /// 获得 侧边栏 Style 字符串
     /// </summary>
     private string? SideStyleString => CssBuilder.Default()
-        .AddClass($"width: {SideWidth.ConvertToPercentString()}", !IsCollapsed && !string.IsNullOrEmpty(SideWidth) && SideWidth != "0")
-        .Build();
-
-    /// <summary>
-    /// 获得 Main 样式
-    /// </summary>
-    private string? MainClassString => CssBuilder.Default("layout-main")
-        .AddClass("is-collapsed", IsCollapsed)
-        .Build();
-
-    /// <summary>
-    /// 获得 展开收缩 Bar 样式
-    /// </summary>
-    private string? CollapseBarClassString => CssBuilder.Default("layout-header-bar")
-        .AddClass("is-collapsed", IsCollapsed)
+        .AddClass($"--bb-layout-sidebar-width: {SideWidth.ConvertToPercentString()}", !string.IsNullOrEmpty(SideWidth) && SideWidth != "0")
         .Build();
 
     /// <summary>
@@ -307,17 +318,14 @@ public partial class Layout : IHandlerException
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
+    [Inject, NotNull]
+    private IServiceProvider? ServiceProvider { get; set; }
+
     [Inject]
     [NotNull]
     private IStringLocalizer<Layout>? Localizer { get; set; }
 
-    [Inject]
-    private IAuthorizationPolicyProvider? AuthorizationPolicyProvider { get; set; }
-
-    [Inject]
-    private IAuthorizationService? AuthorizationService { get; set; }
-
-    private bool IsInit { get; set; }
+    private bool _init { get; set; }
 
     /// <summary>
     /// <inheritdoc/>
@@ -353,7 +361,7 @@ public partial class Layout : IHandlerException
             var context = RouteTableFactory.Create(AdditionalAssemblies, url);
             if (context.Handler != null)
             {
-                IsAuthenticated = await context.Handler.IsAuthorizedAsync(AuthenticationStateTask, AuthorizationPolicyProvider, AuthorizationService, Resource);
+                IsAuthenticated = await context.Handler.IsAuthorizedAsync(ServiceProvider, AuthenticationStateTask, Resource);
 
                 // 检查当前 Url
                 if (OnAuthorizing != null)
@@ -367,7 +375,7 @@ public partial class Layout : IHandlerException
             IsAuthenticated = true;
         }
 
-        IsInit = true;
+        _init = true;
     }
 
     /// <summary>
@@ -378,8 +386,6 @@ public partial class Layout : IHandlerException
         base.OnParametersSet();
 
         TooltipText ??= Localizer[nameof(TooltipText)];
-        SideWidth ??= "300";
-
         MenuBarIcon ??= IconTheme.GetIconByKey(ComponentIcons.LayoutMenuBarIcon);
     }
 
@@ -438,12 +444,26 @@ public partial class Layout : IHandlerException
     }
 
     /// <summary>
-    /// 点击 收缩展开按钮时回调此方法
+    /// 点击菜单时回调此方法
     /// </summary>
     /// <returns></returns>
-    private async Task CollapseMenu()
+    private async Task ClickMenu(MenuItem item)
     {
-        IsCollapsed = !IsCollapsed;
+        // 小屏幕时生效
+        if (IsSmallScreen && !item.Items.Any())
+        {
+            IsCollapsed = false;
+            await TriggerCollapseChanged();
+        }
+
+        if (OnClickMenu != null)
+        {
+            await OnClickMenu(item);
+        }
+    }
+
+    private async Task TriggerCollapseChanged()
+    {
         if (IsCollapsedChanged.HasDelegate)
         {
             await IsCollapsedChanged.InvokeAsync(IsCollapsed);
@@ -455,23 +475,12 @@ public partial class Layout : IHandlerException
         }
     }
 
-    /// <summary>
-    /// 点击菜单时回调此方法
-    /// </summary>
-    /// <returns></returns>
-    private Func<MenuItem, Task> ClickMenu() => async item =>
+    private async Task ToggleSidebar()
     {
-        // 小屏幕时生效
-        if (IsSmallScreen && !item.Items.Any())
-        {
-            await CollapseMenu();
-        }
+        IsCollapsed = !IsCollapsed;
 
-        if (OnClickMenu != null)
-        {
-            await OnClickMenu(item);
-        }
-    };
+        await TriggerCollapseChanged();
+    }
 
     /// <summary>
     /// 上次渲染错误内容
@@ -486,8 +495,11 @@ public partial class Layout : IHandlerException
     public virtual Task HandlerException(Exception ex, RenderFragment<Exception> errorContent)
     {
         _errorContent = errorContent(ex);
+        StateHasChanged();
         return Task.CompletedTask;
     }
+
+    private string? GetTargetString() => IsFixedTabHeader ? ".tabs-body" : null;
 
     /// <summary>
     /// <inheritdoc/>

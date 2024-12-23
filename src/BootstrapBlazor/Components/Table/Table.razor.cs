@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
@@ -12,9 +13,7 @@ namespace BootstrapBlazor.Components;
 /// <summary>
 /// Table 组件基类
 /// </summary>
-#if NET6_0_OR_GREATER
 [CascadingTypeParameter(nameof(TItem))]
-#endif
 public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where TItem : class
 {
     /// <summary>
@@ -29,6 +28,12 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     [Parameter]
     [NotNull]
     public string? ColumnToolboxIcon { get; set; }
+
+    /// <summary>
+    /// 获得/设置 默认固定列宽度 默认 200 单位 px
+    /// </summary>
+    [Parameter]
+    public int DefaultFixedColumnWidth { get; set; } = 200;
 
     /// <summary>
     /// 获得/设置 内置虚拟化组件实例
@@ -64,7 +69,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     /// </summary>
     protected string? WrapperClassName => CssBuilder.Default()
         .AddClass("table-shim", ActiveRenderMode == TableRenderMode.Table)
-        .AddClass("table-card", ActiveRenderMode == TableRenderMode.CardView)
+        .AddClass("table-card scroll", ActiveRenderMode == TableRenderMode.CardView)
         .AddClass("table-wrapper", IsBordered)
         .AddClass("is-clickable", ClickToSelect || DoubleClickToEdit || OnClickRowCallback != null || OnDoubleClickRowCallback != null)
         .AddClass("table-scroll scroll", !IsFixedHeader || FixedColumn)
@@ -379,6 +384,8 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     private ILookupService? LookupService { get; set; }
 
     private bool _breakPointChanged;
+
+    private bool _viewChanged;
 
     private List<ColumnWidth> _clientColumnWidths = [];
 
@@ -717,6 +724,24 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     [NotNull]
     public string? AlignRightTooltipText { get; set; }
 
+    /// <summary>
+    /// 获得/设置 新建按钮是否禁用回调方法 默认 null 未设置
+    /// </summary>
+    [Parameter]
+    public Func<List<TItem>, bool>? DisableAddButtonCallback { get; set; }
+
+    /// <summary>
+    /// 获得/设置 删除按钮是否禁用回调方法 默认 null 未设置
+    /// </summary>
+    [Parameter]
+    public Func<List<TItem>, bool>? DisableDeleteButtonCallback { get; set; }
+
+    /// <summary>
+    /// 获得/设置 编辑按钮是否禁用回调方法 默认 null 未设置
+    /// </summary>
+    [Parameter]
+    public Func<List<TItem>, bool>? DisableEditButtonCallback { get; set; }
+
     [CascadingParameter]
     private ContextMenuZone? ContextMenuZone { get; set; }
 
@@ -736,9 +761,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         base.OnInitialized();
 
         // 初始化节点缓存
-        TreeNodeCache ??= new(Equals);
-        SearchModel = CreateTItem();
-
+        TreeNodeCache ??= new(this);
         OnInitLocalization();
 
         // 设置 OnSort 回调方法
@@ -860,6 +883,8 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         TreeExpandIcon ??= IconTheme.GetIconByKey(ComponentIcons.TableTreeExpandIcon);
         TreeNodeLoadingIcon ??= IconTheme.GetIconByKey(ComponentIcons.TableTreeNodeLoadingIcon);
         AdvancedSortButtonIcon ??= IconTheme.GetIconByKey(ComponentIcons.TableAdvancedSortButtonIcon);
+
+        SearchModel ??= CreateSearchModel();
     }
 
     /// <summary>
@@ -925,6 +950,12 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         if (firstRender)
         {
             await ProcessFirstRender();
+        }
+
+        if (_viewChanged)
+        {
+            _viewChanged = false;
+            await InvokeVoidAsync("toggleView", Id);
         }
 
         if (_breakPointChanged)
@@ -1147,11 +1178,11 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     /// <returns></returns>
     protected override async Task InvokeInitAsync()
     {
-        ScreenSize = BreakPoint.ExtraExtraLarge;
-        var pointString = await InvokeAsync<string?>("getResponsive");
-        if (Enum.TryParse<BreakPoint>(pointString, true, out var p))
+        ScreenSize = BreakPoint.None;
+        var breakPoint = await InvokeAsync<BreakPoint>("getResponsive");
+        if (breakPoint != BreakPoint.None)
         {
-            ScreenSize = p;
+            ScreenSize = breakPoint;
         }
     }
 
@@ -1223,13 +1254,6 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     private bool _autoQuery;
 
     /// <summary>
-    /// 检查当前列是否显示方法
-    /// </summary>
-    /// <param name="col"></param>
-    /// <returns></returns>
-    protected bool CheckShownWithBreakpoint(ITableColumn col) => ScreenSize >= col.ShownWithBreakPoint;
-
-    /// <summary>
     /// OnQueryAsync 查询结果数据集合
     /// </summary>
     private IEnumerable<TItem> QueryItems { get; set; } = [];
@@ -1272,13 +1296,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         }
         else
         {
-            if (col.Lookup == null && !string.IsNullOrEmpty(col.LookupServiceKey))
-            {
-                // 未设置 Lookup
-                // 设置 LookupService 键值
-                col.Lookup = LookupService.GetItemsByKey(col.LookupServiceKey, col.LookupServiceData);
-            }
-            builder.AddContent(20, col.RenderValue(item));
+            builder.AddContent(20, col.RenderValue(item, LookupService));
         }
     };
     #endregion
@@ -1299,7 +1317,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
             : col.Template(item);
 
         RenderFragment RenderEditTemplate() => col.EditTemplate == null
-            ? new RenderFragment(builder => builder.CreateComponentByFieldType(this, col, item, changedType, false, LookupService))
+            ? new RenderFragment(builder => builder.CreateComponentByFieldType(this, col, item, changedType, false, col.GetLookupService(LookupService)))
             : col.EditTemplate(item);
     }
 
@@ -1341,7 +1359,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
                     parameters.Add(new(nameof(ValidateBase<string>.OnValueChanged), onValueChanged.Invoke(d, col, (model, column, val) => DynamicContext.OnValueChanged(model, column, val))));
                     col.ComponentParameters = parameters;
                 }
-                builder.CreateComponentByFieldType(this, col, row, changedType, false, LookupService);
+                builder.CreateComponentByFieldType(this, col, row, changedType, false, col.GetLookupService(LookupService));
             };
         }
 
@@ -1391,7 +1409,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
 
     private int GetColumnCount()
     {
-        var colSpan = GetVisibleColumns().Count(col => ScreenSize >= col.ShownWithBreakPoint);
+        var colSpan = GetVisibleColumns().Count();
         if (IsMultipleSelect)
         {
             colSpan++;
@@ -1451,17 +1469,19 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         await QueryData();
     }
 
-    /// <summary>
-    /// 返回 true 时按钮禁用
-    /// </summary>
-    /// <returns></returns>
-    private bool GetEditButtonStatus() => ShowAddForm || AddInCell || SelectedRows.Count != 1;
+    private bool GetAddButtonStatus() => DisableAddButtonCallback?.Invoke(SelectedRows) ?? false;
 
     /// <summary>
     /// 返回 true 时按钮禁用
     /// </summary>
     /// <returns></returns>
-    private bool GetDeleteButtonStatus() => ShowAddForm || AddInCell || SelectedRows.Count == 0;
+    private bool GetEditButtonStatus() => ShowAddForm || AddInCell || (DisableEditButtonCallback?.Invoke(SelectedRows) ?? SelectedRows.Count != 1);
+
+    /// <summary>
+    /// 返回 true 时按钮禁用
+    /// </summary>
+    /// <returns></returns>
+    private bool GetDeleteButtonStatus() => ShowAddForm || AddInCell || (DisableDeleteButtonCallback?.Invoke(SelectedRows) ?? SelectedRows.Count == 0);
 
     private async Task InvokeItemsChanged()
     {
