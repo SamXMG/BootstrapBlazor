@@ -8,7 +8,7 @@ namespace UnitTest.Components;
 public class TreeViewTest : BootstrapBlazorTestBase
 {
     [Fact]
-    public void Items_Ok()
+    public async Task Items_Ok()
     {
         var cut = Context.RenderComponent<TreeView<TreeFoo>>();
         cut.DoesNotContain("tree-root");
@@ -25,7 +25,8 @@ public class TreeViewTest : BootstrapBlazorTestBase
         {
             pb.Add(a => a.Items, TreeFoo.GetTreeItems());
         });
-        cut.Contains("li");
+        var items = cut.FindAll(".tree-content");
+        Assert.Equal(9, items.Count);
 
         cut.SetParametersAndRender(pb =>
         {
@@ -33,7 +34,44 @@ public class TreeViewTest : BootstrapBlazorTestBase
             pb.Add(a => a.ShowSkeleton, false);
         });
         Assert.Equal("", cut.Markup);
+
+        // SetItems
+        await cut.InvokeAsync(() => cut.Instance.SetItems(
+        [
+            new TreeViewItem<TreeFoo>(new TreeFoo() { Text = "Test1" }) { Text = "Test1" },
+            new TreeViewItem<TreeFoo>(new TreeFoo() { Text = "Test2" }) { Text = "Test2" }
+        ]));
+
+        items = cut.FindAll(".tree-content");
+        Assert.Equal(2, items.Count);
     }
+
+    //[Fact]
+    //public void FlatItems_Ok()
+    //{
+    //    var cut = Context.RenderComponent<TreeView<TreeFoo>>(pb =>
+    //    {
+    //        pb.Add(a => a.FlatItems, TreeFoo.GetFlatItems());
+    //    });
+    //    cut.WaitForElement(".tree-view");
+
+    //    // 验证树形结构正确生成
+    //    var nodes = cut.FindAll(".tree-content");
+    //    Assert.Equal(3, nodes.Count);
+
+    //    // 验证父子关系
+    //    var parentNode = cut.Find("[data-item-id='1']");
+    //    Assert.NotNull(parentNode);
+    //    var childNode = cut.Find("[data-item-id='2']");
+    //    Assert.NotNull(childNode);
+    //    Assert.Contains("tree-children", childNode.ParentElement?.ClassName);
+
+    //    cut.SetParametersAndRender(pb =>
+    //    {
+    //        pb.Add(a => a.FlatItems, null);
+    //    });
+    //    Assert.Equal("", cut.Markup);
+    //}
 
     [Fact]
     public void Items_Disabled()
@@ -95,7 +133,7 @@ public class TreeViewTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => cut.Instance.SetActiveItem(items[0]));
 
         var node = cut.Find(".active .tree-node-text");
-        Assert.Equal("navigation one", node.TextContent);
+        Assert.Equal("Navigation one", node.TextContent);
 
         var activeItem = items[1].Items[0].Value;
         await cut.InvokeAsync(() => cut.Instance.SetActiveItem(activeItem));
@@ -110,6 +148,23 @@ public class TreeViewTest : BootstrapBlazorTestBase
 
         activeItem = new TreeFoo();
         await cut.InvokeAsync(() => cut.Instance.SetActiveItem(activeItem));
+    }
+
+    [Fact]
+    public void AppendNode_Ok()
+    {
+        var items = TreeFoo.GetAccordionItems();
+        var cut = Context.RenderComponent<TreeView<TreeFoo>>(pb =>
+        {
+            pb.Add(a => a.Items, items);
+        });
+        var contents = cut.FindAll(".tree-content");
+        Assert.Equal(2, contents.Count);
+
+        items.Add(new TreeViewItem<TreeFoo>(new TreeFoo()) { Text = "append-text" });
+        cut.SetParametersAndRender();
+        contents = cut.FindAll(".tree-content");
+        Assert.Equal(3, contents.Count);
     }
 
     [Fact]
@@ -461,7 +516,7 @@ public class TreeViewTest : BootstrapBlazorTestBase
             pb.Add(a => a.IsVirtualize, false);
             pb.Add(a => a.Items, items);
         });
-        cut.Contains("tree-root scroll");
+        cut.Contains("tree-root");
 
         cut.SetParametersAndRender(pb =>
         {
@@ -482,7 +537,7 @@ public class TreeViewTest : BootstrapBlazorTestBase
                 return [node1, node2];
             });
         });
-        cut.Contains("tree-root is-virtual scroll");
+        cut.Contains("tree-root is-virtual");
 
         // 触发第一个节点展开
         await cut.InvokeAsync(() => cut.Find(".node-icon.visible").Click());
@@ -704,59 +759,6 @@ public class TreeViewTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public async Task IsReset_Ok()
-    {
-        var items = TreeFoo.GetTreeItems();
-        items[0].HasChildren = true;
-        items.RemoveAt(1);
-
-        var cut = Context.RenderComponent<TreeView<TreeFoo>>(pb =>
-        {
-            pb.Add(a => a.Items, items);
-            pb.Add(a => a.IsReset, false);
-            pb.Add(a => a.OnExpandNodeAsync, item =>
-            {
-                var ret = new List<TreeViewItem<TreeFoo>>
-                {
-                    new(new TreeFoo() { Id = item.Value.Id + "10", ParentId = item.Value.Id })
-                };
-                return Task.FromResult(ret.AsEnumerable());
-            });
-        });
-        var node = cut.Find(".fa-caret-right.visible");
-        await cut.InvokeAsync(() => node.Click());
-
-        // 展开第一个节点生成一行子节点
-        var nodes = cut.FindAll(".tree-content");
-        Assert.Equal(3, nodes.Count);
-
-        // 重新设置数据源更新组件，保持状态
-        items = TreeFoo.GetTreeItems();
-        items[0].HasChildren = true;
-        items.RemoveAt(1);
-
-        cut.SetParametersAndRender(pb =>
-        {
-            pb.Add(a => a.Items, items);
-        });
-        nodes = cut.FindAll(".tree-content");
-        Assert.Equal(3, nodes.Count);
-
-        // 设置 IsReset=true 更新数据源后不保持状态
-        items = TreeFoo.GetTreeItems();
-        items[0].HasChildren = true;
-        items.RemoveAt(1);
-
-        cut.SetParametersAndRender(pb =>
-        {
-            pb.Add(a => a.Items, items);
-            pb.Add(a => a.IsReset, true);
-        });
-        nodes = cut.FindAll(".tree-content");
-        Assert.Equal(2, nodes.Count);
-    }
-
-    [Fact]
     public void CanExpandWhenDisabled_Ok()
     {
         var items = TreeFoo.GetTreeItems();
@@ -863,7 +865,6 @@ public class TreeViewTest : BootstrapBlazorTestBase
         {
             pb.Add(a => a.Items, nodes);
             pb.Add(a => a.IsAccordion, true);
-            pb.Add(a => a.IsReset, true);
         });
 
         var bars = cut.FindAll(".fa-caret-right.visible");
@@ -890,7 +891,7 @@ public class TreeViewTest : BootstrapBlazorTestBase
         ];
         nodes = TreeFoo.CascadingTree(items);
 
-        cut.SetParametersAndRender(pb => pb.Add(a => a.Items, nodes));
+        await cut.InvokeAsync(() => cut.Instance.SetItems(nodes));
         // 子节点
         bars = cut.FindAll(".fa-caret-right.visible");
         await cut.InvokeAsync(() => bars[0].Click());
@@ -990,38 +991,25 @@ public class TreeViewTest : BootstrapBlazorTestBase
         var cut = Context.RenderComponent<TreeView<TreeFoo>>(pb =>
         {
             pb.Add(a => a.ShowSearch, true);
-            pb.Add(a => a.OnSearchAsync, v =>
+            pb.Add(a => a.OnSearchAsync, new Func<string?, Task<List<TreeViewItem<TreeFoo>>?>>(v =>
             {
                 key = v;
-                return Task.CompletedTask;
-            });
+                return Task.FromResult<List<TreeViewItem<TreeFoo>>?>([new TreeViewItem<TreeFoo>(new TreeFoo()) { Text = v }]);
+            }));
             pb.Add(a => a.Items, items);
         });
 
         var input = cut.FindComponent<BootstrapInput<string?>>();
         await cut.InvokeAsync(() => input.Instance.OnEnterAsync!("enter"));
         Assert.Equal("enter", key);
-    }
 
-    [Fact]
-    public async Task Esc_Ok()
-    {
-        var key = "123";
-        var items = TreeFoo.GetTreeItems();
-        var cut = Context.RenderComponent<TreeView<TreeFoo>>(pb =>
-        {
-            pb.Add(a => a.ShowSearch, true);
-            pb.Add(a => a.OnSearchAsync, v =>
-            {
-                key = v;
-                return Task.CompletedTask;
-            });
-            pb.Add(a => a.Items, items);
-        });
+        var nodes = cut.FindAll(".tree-content");
+        Assert.Single(nodes);
 
-        var input = cut.FindComponent<BootstrapInput<string?>>();
-        await cut.InvokeAsync(() => input.Instance.OnEscAsync!(null));
-        Assert.Null(key);
+        // trigger esc key
+        await cut.InvokeAsync(() => input.Instance.OnEscAsync!(""));
+        nodes = cut.FindAll(".tree-content");
+        Assert.Equal(9, nodes.Count);
     }
 
     [Fact]

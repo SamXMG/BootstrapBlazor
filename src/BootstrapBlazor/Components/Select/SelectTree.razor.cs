@@ -121,10 +121,22 @@ public partial class SelectTree<TValue> : IModelEqualityComparer<TValue>
     public bool IsEditable { get; set; }
 
     /// <summary>
-    /// 获得/设置 页面刷新是否重置已加载数据 默认 false
+    /// 获得/设置 是否显示搜索栏 默认 false 不显示
     /// </summary>
     [Parameter]
-    public bool IsReset { get; set; }
+    public bool ShowSearch { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否固定搜索栏 默认 false 不固定
+    /// </summary>
+    [Parameter]
+    public bool IsFixedSearch { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否显示重置搜索栏按钮 默认 true 显示
+    /// </summary>
+    [Parameter]
+    public bool ShowResetSearchButton { get; set; } = true;
 
     [Inject]
     [NotNull]
@@ -155,6 +167,21 @@ public partial class SelectTree<TValue> : IModelEqualityComparer<TValue>
     [NotNull]
     private IIconTheme? IconTheme { get; set; }
 
+    private string? SelectTreeCustomClassString => CssBuilder.Default(CustomClassString)
+        .AddClass("select-tree", IsPopover)
+        .Build();
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // 处理 Required 标签
+        AddRequiredValidator();
+    }
+
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
@@ -171,12 +198,20 @@ public partial class SelectTree<TValue> : IModelEqualityComparer<TValue>
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        await base.OnParametersSetAsync();
+        base.OnParametersSet();
 
         DropdownIcon ??= IconTheme.GetIconByKey(ComponentIcons.SelectTreeDropdownIcon);
         PlaceHolder ??= Localizer[nameof(PlaceHolder)];
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
 
         Items ??= [];
 
@@ -219,6 +254,7 @@ public partial class SelectTree<TValue> : IModelEqualityComparer<TValue>
         var currentItem = GetExpandedItems().FirstOrDefault(predicate);
         if (currentItem != null)
         {
+            currentItem.IsActive = true;
             await ItemChanged(currentItem);
         }
     }
@@ -228,7 +264,7 @@ public partial class SelectTree<TValue> : IModelEqualityComparer<TValue>
         if (ItemCache != Items)
         {
             ItemCache = Items;
-            ExpandedItemsCache = TreeItemExtensions.GetAllItems(ItemCache).ToList();
+            ExpandedItemsCache = TreeViewExtensions.GetAllItems(ItemCache).ToList();
         }
         return ExpandedItemsCache;
     }

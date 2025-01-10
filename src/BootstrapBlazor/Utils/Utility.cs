@@ -156,7 +156,6 @@ public static class Utility
     /// <param name="typeName">类名称</param>
     /// <param name="cultureName">cultureName 未空时使用 CultureInfo.CurrentUICulture.Name</param>
     /// <param name="forceLoad">默认 false 使用缓存值 设置 true 时内部强制重新加载</param>
-    /// <returns></returns>
     public static IEnumerable<LocalizedString> GetJsonStringByTypeName(JsonLocalizationOptions option, Assembly assembly, string typeName, string? cultureName = null, bool forceLoad = false) => CacheManager.GetJsonStringByTypeName(option, assembly, typeName, cultureName, forceLoad) ?? [];
 
     /// <summary>
@@ -367,7 +366,7 @@ public static class Utility
         return defaultOrderCallback?.Invoke(cols) ?? cols;
     }
 
-    internal static IEnumerable<ITableColumn> OrderFunc(this IEnumerable<ITableColumn> cols) => cols
+    internal static IEnumerable<ITableColumn> OrderFunc(this List<ITableColumn> cols) => cols
         .Where(a => a.Order > 0).OrderBy(a => a.Order)
         .Concat(cols.Where(a => a.Order == 0))
         .Concat(cols.Where(a => a.Order < 0).OrderBy(a => a.Order));
@@ -404,7 +403,6 @@ public static class Utility
                 builder.AddAttribute(50, "class", col.CssClass);
             }
             builder.AddMultipleAttributes(60, item.ComponentParameters);
-            builder.CloseComponent();
         }
         else if (item.ComponentType == typeof(Textarea) || item.Rows > 0)
         {
@@ -422,17 +420,18 @@ public static class Utility
                 builder.AddAttribute(60, "class", col.CssClass);
             }
             builder.AddMultipleAttributes(70, item.ComponentParameters);
-            builder.CloseComponent();
         }
         else
         {
             builder.OpenComponent(0, typeof(Display<>).MakeGenericType(fieldType));
             builder.AddAttribute(10, nameof(Display<string>.DisplayText), displayName);
             builder.AddAttribute(20, nameof(Display<string>.Value), fieldValue);
-            builder.AddAttribute(30, nameof(Display<string>.LookupServiceKey), item.LookupServiceKey);
-            builder.AddAttribute(40, nameof(Display<string>.LookupServiceData), item.LookupServiceData);
-            builder.AddAttribute(50, nameof(Display<string>.Lookup), item.Lookup);
-            builder.AddAttribute(60, nameof(Display<string>.ShowLabelTooltip), item.ShowLabelTooltip);
+            builder.AddAttribute(30, nameof(Display<string>.Lookup), item.Lookup);
+            builder.AddAttribute(30, nameof(Display<string>.LookupService), item.LookupService);
+            builder.AddAttribute(40, nameof(Display<string>.LookupServiceKey), item.LookupServiceKey);
+            builder.AddAttribute(50, nameof(Display<string>.LookupServiceData), item.LookupServiceData);
+            builder.AddAttribute(60, nameof(Display<string>.LookupStringComparison), item.LookupStringComparison);
+            builder.AddAttribute(65, nameof(Display<string>.ShowLabelTooltip), item.ShowLabelTooltip);
             if (item is ITableColumn col)
             {
                 if (col.Formatter != null)
@@ -446,8 +445,9 @@ public static class Utility
                 builder.AddAttribute(90, "class", col.CssClass);
             }
             builder.AddMultipleAttributes(100, item.ComponentParameters);
-            builder.CloseComponent();
         }
+
+        builder.CloseComponent();
     }
 
     /// <summary>
@@ -522,6 +522,7 @@ public static class Utility
         if (item.IsLookup() && item.Items == null)
         {
             builder.AddAttribute(110, nameof(Select<SelectedItem>.ShowSearch), item.ShowSearchWhenSelect);
+            builder.AddAttribute(115, nameof(Select<SelectedItem>.Items), item.Lookup);
             builder.AddAttribute(120, nameof(Select<SelectedItem>.LookupService), lookupService);
             builder.AddAttribute(121, nameof(Select<SelectedItem>.LookupServiceKey), item.LookupServiceKey);
             builder.AddAttribute(122, nameof(Select<SelectedItem>.LookupServiceData), item.LookupServiceData);
@@ -635,7 +636,7 @@ public static class Utility
         {
             ret = typeof(NullSwitch);
         }
-        else if (fieldType.IsNumber())
+        else if (fieldType.IsNumberWithDotSeparator())
         {
             ret = typeof(BootstrapInputNumber<>).MakeGenericType(fieldType);
         }
@@ -701,7 +702,7 @@ public static class Utility
                 ret.Add("rows", item.Rows);
             }
         }
-        else if (type.IsNumber())
+        else if (type.IsNumberWithDotSeparator())
         {
             if (!string.IsNullOrEmpty(item.Step))
             {

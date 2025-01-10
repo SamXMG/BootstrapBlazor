@@ -119,6 +119,21 @@ public class SelectTest : BootstrapBlazorTestBase
     }
 
     [Fact]
+    public void Select_Lookup()
+    {
+        var cut = Context.RenderComponent<Select<string>>(pb =>
+        {
+            pb.Add(a => a.LookupServiceKey, "FooLookup");
+        });
+        ILookup lookup = cut.Instance;
+        lookup.Lookup = [new SelectedItem("", "test")];
+        Assert.Single(lookup.Lookup);
+
+        lookup.LookupStringComparison = StringComparison.Ordinal;
+        Assert.Equal(StringComparison.Ordinal, lookup.LookupStringComparison);
+    }
+
+    [Fact]
     public void IsClearable_Ok()
     {
         var val = "Test2";
@@ -474,8 +489,36 @@ public class SelectTest : BootstrapBlazorTestBase
             pb.Add(a => a.ShowSearch, true);
             pb.Add(a => a.IsFixedSearch, true);
         });
+        Assert.Contains("search show is-fixed", cut.Markup);
+        Assert.Contains("class=\"icon search-icon", cut.Markup);
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowSearch, false);
+        });
         Assert.Contains("search is-fixed", cut.Markup);
-        Assert.Contains("class=\"icon", cut.Markup);
+    }
+
+    [Fact]
+    public void ScrollIntoViewBehavior_Ok()
+    {
+        var cut = Context.RenderComponent<Select<string>>(pb =>
+        {
+            pb.Add(a => a.Items, new SelectedItem[]
+            {
+                new("1", "Test1"),
+                new("2", "Test2")
+            });
+            pb.Add(a => a.Value, "2");
+            pb.Add(a => a.ScrollIntoViewBehavior, ScrollIntoViewBehavior.Auto);
+        });
+        Assert.Contains("data-bb-scroll-behavior=\"auto\"", cut.Markup);
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ScrollIntoViewBehavior, ScrollIntoViewBehavior.Smooth);
+        });
+        Assert.DoesNotContain("data-bb-scroll-behavior", cut.Markup);
     }
 
     [Fact]

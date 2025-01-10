@@ -13,7 +13,6 @@ public class SelectTreeTest : BootstrapBlazorTestBase
         var cut = Context.RenderComponent<SelectTree<string>>(builder =>
         {
             builder.Add(p => p.ShowIcon, true);
-            builder.Add(p => p.IsReset, false);
             builder.Add(p => p.ModelEqualityComparer, (s1, s2) => { return true; });
             builder.Add(p => p.OnExpandNodeAsync, (s) => { return Task.FromResult(new List<TreeViewItem<string>>().AsEnumerable()); });
             builder.Add(p => p.CustomKeyAttribute, typeof(string));
@@ -189,6 +188,45 @@ public class SelectTreeTest : BootstrapBlazorTestBase
             pb.Add(a => a.IsPopover, true);
         });
         cut.DoesNotContain("data-bs-toggle=\"dropdown\"");
+    }
+
+    [Fact]
+    public void IsActive_Ok()
+    {
+        var items = TreeFoo.GetTreeItems();
+        var cut = Context.RenderComponent<SelectTree<TreeFoo>>(builder =>
+        {
+            builder.Add(p => p.Items, items);
+            builder.Add(p => p.Value, new TreeFoo() { Id = "1020", Text = "Navigation Two" });
+        });
+        var nodes = cut.FindAll(".tree-content");
+        Assert.Equal(3, nodes.Count);
+        Assert.Contains("active", nodes[1].ClassName);
+    }
+
+    [Fact]
+    public void ShowSearch_Ok()
+    {
+        var items = TreeFoo.GetTreeItems();
+        var cut = Context.RenderComponent<SelectTree<TreeFoo>>(builder =>
+        {
+            builder.Add(p => p.Items, items);
+            builder.Add(p => p.Value, new TreeFoo() { Id = "1020", Text = "Navigation Two" });
+            builder.Add(p => p.ShowSearch, true);
+        });
+        cut.Contains("tree-search");
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowResetSearchButton, true);
+        });
+        cut.Contains("tree-search-reset");
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.IsFixedSearch, true);
+        });
+        cut.Contains("is-fixed-search");
     }
 
     private List<TreeViewItem<string>> BindItems { get; } =

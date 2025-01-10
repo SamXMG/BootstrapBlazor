@@ -694,6 +694,11 @@ internal static class MenusLocalizerExtensions
                 },
                 new()
                 {
+                    Text = Localizer["RDKit"],
+                    Url = "rdkit"
+                },
+                new()
+                {
                     Text = Localizer["Search"],
                     Url = "search"
                 },
@@ -701,6 +706,11 @@ internal static class MenusLocalizerExtensions
                 {
                     Text = Localizer["Segmented"],
                     Url = "segmented"
+                },
+                new()
+                {
+                    Text = Localizer["SmilesDrawer"],
+                    Url = "smiles-drawer"
                 },
                 new()
                 {
