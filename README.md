@@ -16,7 +16,7 @@ English | <a href="README.zh-CN.md">中文</a>
 
 ---
 ## .NET Foundation
-[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="68px" />](https://www.dotnetfoundation.org/)
+[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="68px" />](https://dotnetfoundation.org/projects/project-detail/bootstrap-blazor)
 <p>This project is part of the <a href="https://www.dotnetfoundation.org/">.NET Foundation</a> and operates under their <a href="https://www.dotnetfoundation.org/code-of-conduct">code of conduct</a>. </p>
 
 ## Features
@@ -182,3 +182,7 @@ For more information see the [.NET Foundation Code of Conduct](https://dotnetfou
 If this project is helpful to you, please scan the QR code below for a cup of coffee.
 
 <img src="https://raw.githubusercontent.com/ArgoZhang/Images/master/Donate/BarCode%402x.png" width="382px;" />
+
+## Sponsor
+Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) for providing free open source license
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="100px" align="right" />

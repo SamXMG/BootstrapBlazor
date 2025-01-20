@@ -17,7 +17,7 @@
 
 ---
 ## .NET Foundation
-[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="68px" />](https://www.dotnetfoundation.org/)
+[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="68px" />](https://dotnetfoundation.org/projects/project-detail/bootstrap-blazor)
 <p>该项目属于 <a href="https://www.dotnetfoundation.org/">.NET 基金会</a> ，并根据其 <a href="https://www.dotnetfoundation.org/code-of-conduct">行为准则</a> 运作。</p>
 
 ## 项目介绍
@@ -227,3 +227,7 @@ Blazor 应用基于组件。 Blazor 中的组件是指 UI 元素，例如页面�
 如果这个项目对您有所帮助，请扫下方二维码打赏一杯咖啡。
 
 <img src="https://gitee.com/Longbow/Pictures/raw/master/WeChat/BarCode@2x.png" width="382px;" />
+
+## 赞助商
+感谢 [JetBrains](https://jb.gg/OpenSourceSupport) 提供的免费开源 License
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="100px" align="right" />

@@ -2306,6 +2306,7 @@
     "Att7": "The data collection",
     "Event1": "This event is triggered when the cascading selection option changes",
     "SubmitButtonText": "Submit",
+    "ValidateButtonText": "Validate",
     "item1": "Melbourne",
     "item1_child1": "Brunswick",
     "item1_child1_child": "so-and-so street",
@@ -3693,6 +3694,9 @@
     "ViewModeIntro": "By setting the property <code>CalendarViewMode.Week</code>",
     "CellTemplateTitle": "Cell Template",
     "CellTemplateIntro": "customer the cell template via <code>CellTemplate</code>",
+    "HeaderTemplateTitle": "Header Template",
+    "HeaderTemplateIntro": "Customize the header template by setting the property <code>HeaderTemplate</code>",
+    "HeaderTemplateDesc": "Customize the UI by setting the <code>BodyTemplate</code> and <code>HeaderTemplate</code>. In this example, additional columns are added to the front and back of the month view, and a timeline is added to the week view",
     "AppTitle": "Practical applications",
     "AppIntro": "Curriculum",
     "AppText": "Currently, the <code>ChildContext</code> is temporarily rendered by the week component, and the data-related operating components in all cells are not encapsulated and will be refined later",
@@ -4786,7 +4790,9 @@
     "WinBox": "WinBox",
     "Player": "Player",
     "RDKit": "RDKit",
-    "SmilesDrawer": "SmilesDrawer"
+    "SmilesDrawer": "SmilesDrawer",
+    "Affix": "Affix",
+    "Watermark": "Watermark"
   },
   "BootstrapBlazor.Server.Components.Samples.Table.TablesHeader": {
     "TablesHeaderTitle": "Header grouping function",
@@ -6082,7 +6088,7 @@
     "ContextMenuTreeTitle": "Tree",
     "ContextMenuTreeIntro": "Right click on the <code>Tree</code> to pop up a context menu",
     "ContextMenuCallbackTitle": "ContextMenu Callback",
-    "ContextMenuCallbackIntro": "By setting the <code>ContextMenu</code> component parameter <code>OnBeforeShowCallback</code>, you can get the callback event before the right-click menu pops up, which can be used for data preparation",
+    "ContextMenuCallbackIntro": "By setting the <code>ContextMenu</code> component parameter <code>OnBeforeShowCallback</code>, you can get the callback event before the right-click menu pops up, which can be used for data preparation or render menus based on conditions",
     "ContextMenuDisabledTitle": "OnDisabledCallback",
     "ContextMenuDisabledIntro": "By setting the <code>ContextMenuItem</code> component parameter <code>OnDisabledCallback</code> callback method, you can set whether the current right-click option is disabled."
   },
@@ -6868,5 +6874,42 @@
     "SmilesDrawerNormalIntro": "Set the molecular formula through <code>Smiles</code> and draw the component",
     "SmilesDrawerSizeTitle": "Size",
     "SmilesDrawerSizeIntro": "Set the width and height of the molecular formula by setting the <code>Width</code> and <code>Height</code> values"
+  },
+  "BootstrapBlazor.Server.Components.Samples.Affixs": {
+    "AffixTitle": "Affix",
+    "AffixIntro": "Fix the element to a specific visible area",
+    "AffixNormalTitle": "Basic usage",
+    "AffixNormalIntro": "Affix is fixed at the top of the page by default",
+    "AffixPositionTitle": "Position",
+    "AffixPositionIntro": "The parameter <code>Position</code> controls whether the top or bottom is fixed, and the <code>Offset</code> value sets the offset to the top or bottom"
+  },
+  "BootstrapBlazor.Server.Components.Samples.Watermarks": {
+    "WatermarkTitle": "Watermark",
+    "WatermarkIntro": "Add specific text or patterns to the page",
+    "WatermarkNormalTitle": "Basic usage",
+    "WatermarkNormalIntro": "Use the <code>Text</code> property to set a string to specify the watermark text"
+  },
+  "BootstrapBlazor.Server.Data.AttributeItem": {
+    "Name": "Name",
+    "Description": "Description",
+    "Type": "Type",
+    "ValueList": "ValueList",
+    "DefaultValue": "DefaultValue"
+  },
+  "BootstrapBlazor.Server.Data.EventItem": {
+    "Name": "Name",
+    "Description": "Description",
+    "Type": "Type"
+  },
+  "BootstrapBlazor.Server.Components.Pages.CacheList": {
+    "CacheListTitle": "CacheManager",
+    "CacheListIntro": "Manage the component library internal cache through the <code>ICacheManager</code> interface method",
+    "CacheListKey": "Key",
+    "CacheListValue": "Value",
+    "CacheListAction": "Action",
+    "CacheListRefresh": "Refresh",
+    "CacheListDelete": "Delete",
+    "CacheListDeleteAll": "Clear",
+    "CacheListCount": "Total {0} Entry"
   }
 }
