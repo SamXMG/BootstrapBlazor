@@ -425,18 +425,22 @@ const setExcelKeyboardListener = table => {
             }
         }
         else if (keyCode === KeyCodes.UP_ARROW) {
-            cells = tr.previousElementSibling?.children;
-            while (index < cells.length) {
-                if (activeCell(cells, index)) {
-                    break;
+            cells = tr.previousElementSibling && tr.previousElementSibling.children;
+            if (cells) {
+                while (index < cells.length) {
+                    if (activeCell(cells, index)) {
+                        break;
+                    }
                 }
             }
         }
         else if (keyCode === KeyCodes.DOWN_ARROW) {
-            cells = tr.nextElementSibling?.children;
-            while (index < cells.length) {
-                if (activeCell(cells, index)) {
-                    break;
+            cells = tr.nextElementSibling && tr.nextElementSibling.children;
+            if (cells) {
+                while (index < cells.length) {
+                    if (activeCell(cells, index)) {
+                        break;
+                    }
                 }
             }
         }
@@ -586,9 +590,10 @@ const setResizeListener = table => {
                 const marginX = eventX - originalX
                 table.tables.forEach(t => {
                     const group = [...t.children].find(i => i.nodeName === 'COLGROUP')
+                    const calcColWidth = colWidth + marginX;
                     if (group) {
                         const curCol = group.children.item(colIndex)
-                        curCol.style.width = `${colWidth + marginX}px`
+                        curCol.style.setProperty('width', `${calcColWidth}px`);
                         const tableEl = curCol.closest('table')
                         let width = tableWidth + marginX
                         if (t.closest('.table-fixed-body')) {
@@ -606,6 +611,22 @@ const setResizeListener = table => {
                                 tip.update();
                             }
                         }
+
+                        const header = col.parentElement;
+                        if (header.classList.contains('fixed')) {
+                            resizeNextFixedColumnWidth(header, calcColWidth);
+                        }
+                    }
+
+                    const tbody = [...t.children].find(i => i.nodeName === 'TBODY');
+                    if (tbody) {
+                        const rows = [...tbody.children].filter(i => i.nodeName === 'TR');
+                        rows.forEach(row => {
+                            const header = row.children.item(colIndex);
+                            if (header.classList.contains('fixed')) {
+                                resizeNextFixedColumnWidth(header, calcColWidth);
+                            }
+                        });
                     }
                 })
             },
@@ -622,6 +643,25 @@ const setResizeListener = table => {
             }
         )
     })
+}
+
+const resizeNextFixedColumnWidth = (col, width) => {
+    if (col.classList.contains('fixed-right')) {
+        const nextColumn = col.previousElementSibling;
+        if (nextColumn.classList.contains('fixed')) {
+            const right = parseFloat(col.style.getPropertyValue('right'));
+            nextColumn.style.setProperty('right', `${right + width}px`);
+            resizeNextFixedColumnWidth(nextColumn, nextColumn.offsetWidth);
+        }
+    }
+    else if (col.classList.contains('fixed')) {
+        const nextColumn = col.nextElementSibling;
+        if (nextColumn.classList.contains('fixed')) {
+            const left = parseFloat(col.style.getPropertyValue('left'));
+            nextColumn.style.setProperty('left', `${left + width}px`);
+            resizeNextFixedColumnWidth(nextColumn, nextColumn.offsetWidth);
+        }
+    }
 }
 
 const setColumnResizingListen = (table, col) => {

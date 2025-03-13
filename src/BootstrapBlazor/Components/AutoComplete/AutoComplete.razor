@@ -10,13 +10,20 @@
            data-bs-toggle="@ToggleString" data-bs-placement="@PlacementString"
            data-bs-offset="@OffsetString" data-bs-custom-class="@CustomClassString"
            data-bb-auto-dropdown-focus="@ShowDropdownListOnFocusString" data-bb-debounce="@DurationString"
-           data-bb-skip-esc="@SkipEscString" data-bb-skip-enter="@SkipEnterString"
+           data-bb-skip-esc="@SkipEscString" data-bb-skip-enter="@SkipEnterString" data-bb-blur="@TriggerBlurString"
            data-bb-scroll-behavior="@ScrollIntoViewBehaviorString"
            value="@CurrentValueAsString"
            placeholder="@PlaceHolder" disabled="@Disabled" @ref="FocusElement"/>
     <span class="form-select-append"><i class="@Icon"></i></span>
     <span class="form-select-append ac-loading"><i class="@LoadingIcon"></i></span>
-    <ul class="dropdown-menu">
+    <RenderTemplate @ref="_dropdown">
+        @RenderDropdown
+    </RenderTemplate>
+</div>
+
+@code {
+    RenderFragment RenderDropdown =>
+    @<ul class="dropdown-menu">
         @foreach (var item in Rows)
         {
             <li @key="item" class="dropdown-item" @onclick="() => OnClickItem(item)">
@@ -34,5 +41,5 @@
         {
             <li class="dropdown-item">@NoDataTip</li>
         }
-    </ul>
-</div>
+    </ul>;
+}

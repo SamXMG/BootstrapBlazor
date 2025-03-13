@@ -26,6 +26,7 @@ public partial class Tab : IHandlerException
 
     private string? GetClassString(TabItem item) => CssBuilder.Default("tabs-item")
         .AddClass("active", item.IsActive)
+        .AddClass("disabled", item.IsDisabled)
         .AddClass(item.CssClass)
         .AddClass("is-closeable", ShowClose)
         .Build();
@@ -125,6 +126,18 @@ public partial class Tab : IHandlerException
     public bool ShowExtendButtons { get; set; }
 
     /// <summary>
+    /// 获得/设置 是否显示前后导航按钮 默认为 true 显示
+    /// </summary>
+    [Parameter]
+    public bool ShowNavigatorButtons { get; set; } = true;
+
+    /// <summary>
+    /// 获得/设置 是否显示活动标签 默认为 true 显示
+    /// </summary>
+    [Parameter]
+    public bool ShowActiveBar { get; set; } = true;
+
+    /// <summary>
     /// 获得/设置 点击 TabItem 时是否自动导航 默认为 false 不导航
     /// </summary>
     [Parameter]
@@ -214,6 +227,20 @@ public partial class Tab : IHandlerException
     public RenderFragment? ButtonTemplate { get; set; }
 
     /// <summary>
+    /// 获得/设置 标签页前置模板 默认 null
+    /// <para>在向前移动标签页按钮前</para>
+    /// </summary>
+    [Parameter]
+    public RenderFragment? BeforeNavigatorTemplate { get; set; }
+
+    /// <summary>
+    /// 获得/设置 标签页后置模板 默认 null
+    /// <para>在向后移动标签页按钮前</para>
+    /// </summary>
+    [Parameter]
+    public RenderFragment? AfterNavigatorTemplate { get; set; }
+
+    /// <summary>
     /// 获得/设置 上一个标签图标
     /// </summary>
     [Parameter]
@@ -278,6 +305,9 @@ public partial class Tab : IHandlerException
     [Inject]
     [NotNull]
     private IIconTheme? IconTheme { get; set; }
+
+    [Inject, NotNull]
+    private DialogService? DialogService { get; set; }
 
     private ConcurrentDictionary<TabItem, bool> LazyTabCache { get; } = new();
 
@@ -745,13 +775,27 @@ public partial class Tab : IHandlerException
         item.SetActive(true);
     }
 
+    /// <summary>
+    /// 设置 TabItem 禁用状态
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="disabled"></param>
+    public void SetDisabledItem(TabItem item, bool disabled)
+    {
+        item.SetDisabledWithoutRender(disabled);
+        StateHasChanged();
+    }
+
     private RenderFragment RenderTabItemContent(TabItem item) => builder =>
     {
+        if (item.IsDisabled)
+        {
+            return;
+        }
+
         if (item.IsActive)
         {
-            var content = _errorContent ?? item.ChildContent;
-            builder.AddContent(0, content);
-            _errorContent = null;
+            builder.AddContent(0, item.ChildContent);
             if (IsLazyLoadTabItem)
             {
                 LazyTabCache.AddOrUpdate(item, _ => true, (_, _) => true);
@@ -763,19 +807,12 @@ public partial class Tab : IHandlerException
         }
     };
 
-    private RenderFragment? _errorContent;
-
     /// <summary>
     /// HandlerException 错误处理方法
     /// </summary>
     /// <param name="ex"></param>
     /// <param name="errorContent"></param>
-    public virtual Task HandlerException(Exception ex, RenderFragment<Exception> errorContent)
-    {
-        _errorContent = errorContent(ex);
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
+    public Task HandlerException(Exception ex, RenderFragment<Exception> errorContent) => DialogService.ShowErrorHandlerDialog(errorContent(ex));
 
     private IEnumerable<MenuItem>? _menuItems;
     private MenuItem? GetMenuItem(string url)

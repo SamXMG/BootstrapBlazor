@@ -119,7 +119,9 @@ public static class Utility
     /// <returns></returns>
     public static object? GetPropertyValue(object model, string fieldName)
     {
-        return model.GetType().Assembly.IsDynamic ? ReflectionInvoke() : LambdaInvoke();
+        return model.GetType().Assembly.IsDynamic
+            ? ReflectionInvoke()
+            : GetPropertyValue<object, object?>(model, fieldName);
 
         object? ReflectionInvoke()
         {
@@ -131,8 +133,6 @@ public static class Utility
             }
             return ret;
         }
-
-        object? LambdaInvoke() => GetPropertyValue<object, object?>(model, fieldName);
     }
 
     /// <summary>
@@ -398,7 +398,7 @@ public static class Utility
     {
         var fieldType = item.PropertyType;
         var fieldName = item.GetFieldName();
-        var displayName = item.GetDisplayName() ?? GetDisplayName(model, fieldName);
+        var displayName = item.GetDisplayName();
         var fieldValue = GenerateValue(model, fieldName);
         var type = (Nullable.GetUnderlyingType(fieldType) ?? fieldType);
         if (type == typeof(bool) || fieldValue?.GetType() == typeof(bool))
@@ -474,7 +474,7 @@ public static class Utility
     {
         var fieldType = item.PropertyType;
         var fieldName = item.GetFieldName();
-        var displayName = item.GetDisplayName() ?? GetDisplayName(model, fieldName);
+        var displayName = item.GetDisplayName();
 
         var fieldValue = GenerateValue(model, fieldName);
         var fieldValueChanged = GenerateValueChanged(component, model, fieldName, fieldType);
@@ -829,6 +829,10 @@ public static class Utility
                     }
                 }
             }
+        }
+        else if (typeValue.IsFlagEnum())
+        {
+            ret = value!.ToString();
         }
         return ret;
     }
