@@ -48,10 +48,10 @@ public partial class BootstrapBlazorRoot
     public Func<ILogger, Exception, Task>? OnErrorHandleAsync { get; set; }
 
     /// <summary>
-    /// 获得/设置 是否显示 Error 提示弹窗 默认 true 显示
+    /// 获得/设置 是否显示 Error 提示弹窗 默认 null 使用 <see cref="BootstrapBlazorOptions.ShowErrorLoggerToast"/> 设置值
     /// </summary>
     [Parameter]
-    public bool ShowToast { get; set; } = true;
+    public bool? ShowToast { get; set; }
 
     /// <summary>
     /// 获得/设置 Error Toast 弹窗标题
@@ -66,6 +66,8 @@ public partial class BootstrapBlazorRoot
     public bool? EnableErrorLogger { get; set; }
 
     private bool EnableErrorLoggerValue => EnableErrorLogger ?? Options.CurrentValue.EnableErrorLogger;
+
+    private bool ShowToastValue => ShowToast ?? Options.CurrentValue.ShowErrorLoggerToast;
 
     /// <summary>
     /// SetParametersAsync 方法

@@ -49,7 +49,7 @@ public class InternalTableColumnTest
         {
             builder.AddContent(0, "test");
         }));
-        SetValue("Filter", new TableFilter());
+        SetValue("Filter", new TableColumnFilter());
         SetValue("FormatString", "test");
         SetValue("Formatter", new Func<object?, Task<string>>(val =>
         {
@@ -60,6 +60,7 @@ public class InternalTableColumnTest
         SetValue("Readonly", true);
         SetValue("Step", "1");
         SetValue("Rows", 1);
+        SetValue("Cols", 6);
         SetValue("ComponentType", typeof(string));
         SetValue("Order", 1);
         SetValue("Lookup", new SelectedItem[] { new("test", "Test") });
@@ -85,6 +86,7 @@ public class InternalTableColumnTest
         SetValue("IsRequiredWhenAdd", true);
         SetValue("IsRequiredWhenEdit", true);
         SetValue("LookupService", null);
+        SetValue("IgnoreWhenExport", true);
 
         void SetValue(string propertyName, object? val) => type!.GetProperty(propertyName)!.SetValue(instance, val);
     }

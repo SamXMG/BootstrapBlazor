@@ -10,7 +10,13 @@ export function init(id, invoke, options) {
     }
 
     const search = el.querySelector(".search-text")
-    const popover = Popover.init(el)
+    const popover = Popover.init(el, {
+        hideCallback: () => {
+            if (options.triggerCollapsed) {
+                invoke.invokeMethodAsync(options.triggerCollapsed);
+            }
+        }
+    });
     const input = el.querySelector(`#${id}_input`);
     const select = {
         el, invoke, options,
@@ -41,6 +47,13 @@ export function hide(id) {
             clearTimeout(handler);
             select.popover.hide();
         }, delay)
+    }
+}
+
+export function resetValue(id, value) {
+    const input = document.getElementById(id);
+    if (input) {
+        input.value = value;
     }
 }
 

@@ -169,20 +169,20 @@ public partial class ValidateForm
     /// </summary>
     /// <param name="expression"></param>
     /// <param name="errorMessage">错误描述信息，可为空，为空时查找资源文件</param>
-    public void SetError<TModel>(Expression<Func<TModel, object?>> expression, string errorMessage)
+    public async Task SetError<TModel>(Expression<Func<TModel, object?>> expression, string errorMessage)
     {
         switch (expression.Body)
         {
             case UnaryExpression { Operand: MemberExpression mem }:
-                InternalSetError(mem, errorMessage);
+                await InternalSetError(mem, errorMessage);
                 break;
             case MemberExpression exp:
-                InternalSetError(exp, errorMessage);
+                await InternalSetError(exp, errorMessage);
                 break;
         }
     }
 
-    private void InternalSetError(MemberExpression exp, string errorMessage)
+    private async Task InternalSetError(MemberExpression exp, string errorMessage)
     {
         if (exp.Expression != null)
         {
@@ -198,7 +198,7 @@ public partial class ValidateForm
             {
                 new(errorMessage, [fieldName])
             };
-            validator.ToggleMessage(results);
+            await validator.ToggleMessage(results);
         }
     }
 
@@ -207,7 +207,7 @@ public partial class ValidateForm
     /// </summary>
     /// <param name="propertyName">字段名，可以使用多层，如 a.b.c</param>
     /// <param name="errorMessage">错误描述信息，可为空，为空时查找资源文件</param>
-    public void SetError(string propertyName, string errorMessage)
+    public async Task SetError(string propertyName, string errorMessage)
     {
         if (TryGetModelField(propertyName, out var modelType, out var fieldName) && TryGetValidator(modelType, fieldName, out var validator))
         {
@@ -215,7 +215,7 @@ public partial class ValidateForm
             {
                 new(errorMessage, [fieldName])
             };
-            validator.ToggleMessage(results);
+            await validator.ToggleMessage(results);
         }
     }
 
@@ -327,7 +327,7 @@ public partial class ValidateForm
             ValidMemberNames.RemoveAll(name => _validateResults.Values.SelectMany(i => i).Any(i => i.MemberNames.Contains(name)));
             foreach (var (validator, messages) in _validateResults)
             {
-                validator.ToggleMessage(messages);
+                await validator.ToggleMessage(messages);
             }
         }
     }
@@ -352,7 +352,7 @@ public partial class ValidateForm
                 }
 
                 // 客户端提示
-                validator.ToggleMessage(results);
+                await validator.ToggleMessage(results);
             }
         }
     }
@@ -385,10 +385,6 @@ public partial class ValidateForm
             var result = rule.GetValidationResult(value, context);
             if (result != null && result != ValidationResult.Success)
             {
-                // 查找 resource 资源文件中的 ErrorMessage
-                var ruleNameSpan = rule.GetType().Name.AsSpan();
-                var index = ruleNameSpan.IndexOf(attributeSpan, StringComparison.OrdinalIgnoreCase);
-                var ruleName = ruleNameSpan[..index];
                 var find = false;
                 if (!string.IsNullOrEmpty(rule.ErrorMessage))
                 {
@@ -400,29 +396,36 @@ public partial class ValidateForm
                     }
                 }
 
-                // 通过设置 ErrorMessage 检索
-                if (!context.ObjectType.Assembly.IsDynamic && !find
-                    && !string.IsNullOrEmpty(rule.ErrorMessage)
-                    && LocalizerFactory.Create(context.ObjectType).TryGetLocalizerString(rule.ErrorMessage, out var msg))
+                if (!context.ObjectType.Assembly.IsDynamic)
                 {
-                    rule.ErrorMessage = msg;
-                    find = true;
-                }
+                    if (!find && !string.IsNullOrEmpty(rule.ErrorMessage)
+                        && LocalizerFactory.Create(context.ObjectType).TryGetLocalizerString(rule.ErrorMessage, out var msg))
+                    {
+                        // 通过设置 ErrorMessage 检索
+                        rule.ErrorMessage = msg;
+                        find = true;
+                    }
 
-                // 通过 Attribute 检索
-                if (!rule.GetType().Assembly.IsDynamic && !find
-                    && LocalizerFactory.Create(rule.GetType()).TryGetLocalizerString(nameof(rule.ErrorMessage), out msg))
-                {
-                    rule.ErrorMessage = msg;
-                    find = true;
-                }
+                    if (!find && LocalizerFactory.Create(rule.GetType()).TryGetLocalizerString(nameof(rule.ErrorMessage), out msg))
+                    {
+                        // 通过 Attribute 检索
+                        rule.ErrorMessage = msg;
+                        find = true;
+                    }
 
-                // 通过 字段.规则名称 检索
-                if (!context.ObjectType.Assembly.IsDynamic && !find
-                    && LocalizerFactory.Create(context.ObjectType).TryGetLocalizerString($"{memberName}.{ruleName.ToString()}", out msg))
-                {
-                    rule.ErrorMessage = msg;
-                    find = true;
+                    if (!find)
+                    {
+                        // 通过 字段.规则名称 检索
+                        // 查找 resource 资源文件中的 ErrorMessage
+                        var ruleNameSpan = rule.GetType().Name.AsSpan();
+                        var index = ruleNameSpan.IndexOf(attributeSpan, StringComparison.OrdinalIgnoreCase);
+                        var ruleName = index == -1 ? ruleNameSpan[..] : ruleNameSpan[..index];
+                        if (LocalizerFactory.Create(context.ObjectType).TryGetLocalizerString($"{memberName}.{ruleName.ToString()}", out msg))
+                        {
+                            rule.ErrorMessage = msg;
+                            find = true;
+                        }
+                    }
                 }
 
                 if (!find)
@@ -474,7 +477,7 @@ public partial class ValidateForm
                         await ValidateAsync(validator, context, messages, pi, propertyValue);
 
                         // 客户端提示
-                        validator.ToggleMessage(messages);
+                        await validator.ToggleMessage(messages);
                     }
                     results.AddRange(messages);
                 }
@@ -507,6 +510,9 @@ public partial class ValidateForm
                 // 未选择文件
                 ValidateDataAnnotations(propertyValue, context, messages, pi);
             }
+
+            _tcs = new TaskCompletionSource<bool>();
+            _tcs.TrySetResult(messages.Count == 0);
         }
         else
         {

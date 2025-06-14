@@ -16,6 +16,12 @@ public partial class Table<TItem>
     public bool ShowToolbar { get; set; }
 
     /// <summary>
+    /// Gets or sets the template of table toolbar. Default is null.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ToolbarTemplate { get; set; }
+
+    /// <summary>
     /// 获得/设置 首次加载是否显示加载骨架屏 默认 false 不显示 使用 <see cref="ShowLoadingInFirstRender" /> 参数值
     /// </summary>
     [Parameter]
@@ -538,8 +544,9 @@ public partial class Table<TItem>
     {
         if (SelectedRows.Count == 1)
         {
-            // 检查是否选中了不可编辑行（行内无编辑按钮）
-            if (ShowExtendEditButtonCallback != null && !ShowExtendEditButtonCallback(SelectedRows[0]))
+            // 检查是否选中了不可编辑行（行内无编辑按钮），同时检查按钮禁用状态（禁用时不可编辑）
+            // ShowExtendEditButton 不参与逻辑，不显示扩展编辑按钮时用户可能自定义按钮调用 EditAsync 方法
+            if (ProhibitEdit())
             {
                 // 提示不可编辑
                 await ShowToastAsync(EditButtonToastTitle, EditButtonToastReadonlyContent);
@@ -648,7 +655,7 @@ public partial class Table<TItem>
         if (DynamicContext != null)
         {
             await DynamicContext.SetValue(context.Model);
-            RowsCache = null;
+            _rowsCache = null;
             valid = true;
         }
         else
@@ -900,7 +907,14 @@ public partial class Table<TItem>
         };
         AppendOptions(editOption, changedType);
 
-        var option = new DrawerOption() { Class = "drawer-table-edit", Placement = Placement.Right, AllowResize = true, IsBackdrop = true, Width = "600px" };
+        var option = new DrawerOption()
+        {
+            Class = "drawer-table-edit",
+            Placement = Placement.Right,
+            AllowResize = true,
+            IsBackdrop = true,
+            Width = "600px"
+        };
         if (OnBeforeShowDrawer != null)
         {
             await OnBeforeShowDrawer(option);
@@ -979,7 +993,7 @@ public partial class Table<TItem>
         {
             await ShowDeleteToastAsync(DeleteButtonToastTitle, DeleteButtonToastContent);
         }
-        else if (ShowExtendDeleteButtonCallback != null && SelectedRows.Any(i => !ShowExtendDeleteButtonCallback(i)))
+        else if (ProhibitDelete())
         {
             await ShowDeleteToastAsync(DeleteButtonToastTitle, DeleteButtonToastCanNotDeleteContent);
         }
@@ -989,6 +1003,14 @@ public partial class Table<TItem>
         }
         return ret;
     }
+
+    private bool ProhibitEdit() => (ShowExtendEditButtonCallback != null && !ShowExtendEditButtonCallback(SelectedRows[0]))
+            || (DisableExtendEditButtonCallback != null && DisableExtendEditButtonCallback(SelectedRows[0]))
+            || DisableExtendEditButton;
+
+    private bool ProhibitDelete() => (ShowExtendDeleteButtonCallback != null && SelectedRows.Any(i => !ShowExtendDeleteButtonCallback(i)))
+            || (DisableExtendDeleteButtonCallback != null && SelectedRows.Any(x => DisableExtendDeleteButtonCallback(x)))
+            || DisableExtendDeleteButton;
 
     /// <summary>
     /// 删除数据方法
@@ -1095,7 +1117,7 @@ public partial class Table<TItem>
 
     private void QueryDynamicItems(QueryPageOptions queryOption, IDynamicObjectContext? context)
     {
-        RowsCache = null;
+        _rowsCache = null;
         if (context != null)
         {
             var items = context.GetItems();
@@ -1146,27 +1168,40 @@ public partial class Table<TItem>
         }
     }
 
-    private ToastOption GetToastOption(string title) => new()
+    private ToastOption GetToastOption(string title)
     {
-        Title = title,
-        Delay = Options.CurrentValue.ToastDelay
-    };
+        var option = new ToastOption()
+        {
+            Title = title,
+        };
+        if (Options.CurrentValue.ToastDelay > 0)
+        {
+            option.Delay = Options.CurrentValue.ToastDelay;
+        }
+        return option;
+    }
 
     private Task ExportAsync() => ExecuteExportAsync(() => OnExportAsync != null
-        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Unknown, Rows, GetVisibleColumns(), BuildQueryPageOptions()))
-        : TableExport.ExportAsync(Rows, GetVisibleColumns()));
+        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Unknown, Rows, GetExportColumns(), BuildQueryPageOptions()))
+        : TableExport.ExportAsync(Rows, GetExportColumns()));
 
     private Task ExportCsvAsync() => ExecuteExportAsync(() => OnExportAsync != null
-        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Csv, Rows, GetVisibleColumns(), BuildQueryPageOptions()))
-        : TableExport.ExportCsvAsync(Rows, GetVisibleColumns()));
+        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Csv, Rows, GetExportColumns(), BuildQueryPageOptions()))
+        : TableExport.ExportCsvAsync(Rows, GetExportColumns()));
 
     private Task ExportPdfAsync() => ExecuteExportAsync(() => OnExportAsync != null
-        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Pdf, Rows, GetVisibleColumns(), BuildQueryPageOptions()))
-        : TableExport.ExportPdfAsync(Rows, GetVisibleColumns()));
+        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Pdf, Rows, GetExportColumns(), BuildQueryPageOptions()))
+        : TableExport.ExportPdfAsync(Rows, GetExportColumns()));
 
     private Task ExportExcelAsync() => ExecuteExportAsync(() => OnExportAsync != null
-        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Excel, Rows, GetVisibleColumns(), BuildQueryPageOptions()))
-        : TableExport.ExportExcelAsync(Rows, GetVisibleColumns()));
+        ? OnExportAsync(new TableExportDataContext<TItem>(TableExportType.Excel, Rows, GetExportColumns(), BuildQueryPageOptions()))
+        : TableExport.ExportExcelAsync(Rows, GetExportColumns()));
+
+    /// <summary>
+    /// Gets the export column collection.
+    /// </summary>
+    /// <returns></returns>
+    public List<ITableColumn> GetExportColumns() => [.. GetVisibleColumns().Where(i => i.IgnoreWhenExport is not true)];
 
     /// <summary>
     /// 获取当前 Table 选中的所有行数据

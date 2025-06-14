@@ -67,6 +67,11 @@ public interface IEditorItem : ILookup
     int Rows { get; set; }
 
     /// <summary>
+    /// Gets or sets the field expand columns. Default is 0.
+    /// </summary>
+    int Cols { get; set; }
+
+    /// <summary>
     /// Gets or sets the edit template.
     /// </summary>
     RenderFragment<object>? EditTemplate { get; set; }
@@ -85,6 +90,13 @@ public interface IEditorItem : ILookup
     /// Gets or sets whether to show the search bar in the dropdown list. Default is false.
     /// </summary>
     bool ShowSearchWhenSelect { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to allow fixed search box within dropdown. Default is false.
+    /// </summary>
+    [Obsolete("已弃用，请删除；Deprecated, please delete")]
+    [ExcludeFromCodeCoverage]
+    bool IsFixedSearchWhenSelect { get; set; }
 
     /// <summary>
     /// Gets or sets whether to use Popover to render the dropdown list. Default is false.

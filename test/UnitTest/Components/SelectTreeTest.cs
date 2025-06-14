@@ -12,6 +12,7 @@ public class SelectTreeTest : BootstrapBlazorTestBase
     {
         var cut = Context.RenderComponent<SelectTree<string>>(builder =>
         {
+            builder.Add(a => a.CanExpandWhenDisabled, false);
             builder.Add(p => p.ShowIcon, true);
             builder.Add(p => p.ModelEqualityComparer, (s1, s2) => { return true; });
             builder.Add(p => p.OnExpandNodeAsync, (s) => { return Task.FromResult(new List<TreeViewItem<string>>().AsEnumerable()); });
@@ -221,12 +222,6 @@ public class SelectTreeTest : BootstrapBlazorTestBase
             pb.Add(a => a.ShowResetSearchButton, true);
         });
         cut.Contains("tree-search-reset");
-
-        cut.SetParametersAndRender(pb =>
-        {
-            pb.Add(a => a.IsFixedSearch, true);
-        });
-        cut.Contains("is-fixed-search");
     }
 
     private List<TreeViewItem<string>> BindItems { get; } =

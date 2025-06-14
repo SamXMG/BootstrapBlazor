@@ -53,6 +53,7 @@ public static class IEditItemExtensions
         if (source.LookupService != null) dest.LookupService = source.LookupService;
         if (source.Readonly.HasValue) dest.Readonly = source.Readonly;
         if (source.Rows > 0) dest.Rows = source.Rows;
+        if (source.Cols > 0) dest.Cols = source.Cols;
         if (source.SkipValidate) dest.SkipValidate = source.SkipValidate;
         if (!string.IsNullOrEmpty(source.Text)) dest.Text = source.Text;
         if (source.ValidateRules != null) dest.ValidateRules = source.ValidateRules;
@@ -110,6 +111,7 @@ public static class IEditItemExtensions
         if (col.ToolboxTemplate != null) dest.ToolboxTemplate = col.ToolboxTemplate;
         if (col.IsRequiredWhenAdd.HasValue) dest.IsRequiredWhenAdd = col.IsRequiredWhenAdd;
         if (col.IsRequiredWhenEdit.HasValue) dest.IsRequiredWhenEdit = col.IsRequiredWhenEdit;
+        if (col.IgnoreWhenExport.HasValue) dest.IgnoreWhenExport = col.IgnoreWhenExport;
     }
 
     /// <summary>

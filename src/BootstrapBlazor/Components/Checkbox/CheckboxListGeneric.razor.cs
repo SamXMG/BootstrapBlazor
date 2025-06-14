@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 // Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using Microsoft.Extensions.Localization;
-
 namespace BootstrapBlazor.Components;
 
 /// <summary>
@@ -189,22 +187,7 @@ public partial class CheckboxListGeneric<TValue> : IModelEqualityComparer<TValue
     private async Task OnStateChanged(SelectedItem<TValue> item, bool v)
     {
         item.Active = v;
-        var items = new List<TValue>();
-        if (Value != null)
-        {
-            items.AddRange(Value);
-        }
-
-        var val = items.Find(i => Equals(item.Value, i));
-        if (v && val == null)
-        {
-            items.Add(item.Value);
-        }
-        else
-        {
-            items.Remove(val!);
-        }
-
+        var items = Items.Where(i => i.Active).Select(i => i.Value).ToList();
         CurrentValue = items;
 
         if (OnSelectedChanged != null)

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 // Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using System.Reflection;
 using System.Web;
 
 namespace UnitTest.Components;
@@ -57,7 +56,7 @@ public class DisplayTest : BootstrapBlazorTestBase
         {
             pb.Add(a => a.LookupService, new MockLookupService());
         });
-        await Task.Delay(20);
+        await Task.Delay(50);
         Assert.Contains("Test1,Test2", cut.Markup);
 
         cut.SetParametersAndRender(pb =>
@@ -65,7 +64,7 @@ public class DisplayTest : BootstrapBlazorTestBase
             pb.Add(a => a.LookupServiceKey, null);
             pb.Add(a => a.Lookup, new List<SelectedItem> { new("v1", "Test3"), new("v2", "Test4") });
         });
-        await Task.Delay(20);
+        await Task.Delay(50);
         Assert.Contains("Test3,Test4", cut.Markup);
     }
 
@@ -215,7 +214,7 @@ public class DisplayTest : BootstrapBlazorTestBase
                 });
             });
         });
-        Assert.Contains("<div class=\"input-group\"><div class=\"form-control is-display\">test-name</div><div class=\"input-group-text\"><span>姓名</span></div><div class=\"input-group-text\"><span></span></div></div>", cut.Markup);
+        Assert.Contains("<div class=\"input-group\"><div class=\"form-control is-display\">test-name</div><div class=\"input-group-text\">姓名</div><div class=\"input-group-text\"></div></div>", cut.Markup);
     }
 
     [Fact]

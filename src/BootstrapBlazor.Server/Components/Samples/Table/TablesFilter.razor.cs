@@ -29,24 +29,21 @@ public partial class TablesFilter
     [NotNull]
     private Table<Foo>? TableSetFilter { get; set; }
 
-    private IEnumerable<SelectedItem> _nameMultiFilterItems = default!;
-
     /// <summary>
-    /// OnInitialized 方法
+    /// <inheritdoc/>
     /// </summary>
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
         Items = Foo.GenerateFoo(FooLocalizer);
-        _nameMultiFilterItems = Items.Select(i => new SelectedItem(i.Name!, i.Name!)).DistinctBy(i => i.Value);
     }
 
     private async Task<List<SelectedItem>> OnGetAddressItemsAsync()
     {
         // 模拟数据库延时
         await Task.Delay(500);
-        return Items.Select(i => new SelectedItem(i.Address!, i.Address!)).DistinctBy(i => i.Value).ToList();
+        return [.. Items.Select(i => new SelectedItem(i.Address!, i.Address!)).DistinctBy(i => i.Value)];
     }
 
     private Task<QueryData<Foo>> OnQueryAsync(QueryPageOptions options)

@@ -23,6 +23,8 @@ public partial class BootstrapInputGroupLabel
         .AddClassFromAttributes(AdditionalAttributes)
         .Build();
 
+    private string TagName => IsInputGroupLabel ? "div" : "label";
+
     /// <summary>
     /// 获得/设置 标签宽度 默认 null 未设置自动适应
     /// </summary>
@@ -40,6 +42,12 @@ public partial class BootstrapInputGroupLabel
     /// </summary>
     [Parameter]
     public bool ShowRequiredMark { get; set; }
+
+    /// <summary>
+    /// Gets or sets the child content. Default is null.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 
     private string? Required => ShowRequiredMark ? "true" : null;
 

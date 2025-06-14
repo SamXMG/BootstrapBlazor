@@ -327,7 +327,7 @@ public abstract class ValidateBase<TValue> : DisplayBase<TValue>, IValidateCompo
     }
 
     /// <summary>
-    /// OnAfterRender 方法
+    /// <inheritdoc/>
     /// </summary>
     /// <param name="firstRender"></param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -460,12 +460,12 @@ public abstract class ValidateBase<TValue> : DisplayBase<TValue>, IValidateCompo
     /// 显示/隐藏验证结果方法
     /// </summary>
     /// <param name="results"></param>
-    public virtual void ToggleMessage(IEnumerable<ValidationResult> results)
+    public virtual Task ToggleMessage(IReadOnlyCollection<ValidationResult> results)
     {
         if (FieldIdentifier != null)
         {
-            var messages = results.Where(item => item.MemberNames.Any(m => m == FieldIdentifier.Value.FieldName));
-            if (messages.Any())
+            var messages = results.Where(item => item.MemberNames.Any(m => m == FieldIdentifier.Value.FieldName)).ToList();
+            if (messages.Count > 0)
             {
                 ErrorMessage = messages.First().ErrorMessage;
                 IsValid = false;
@@ -481,11 +481,19 @@ public abstract class ValidateBase<TValue> : DisplayBase<TValue>, IValidateCompo
 
         // 必须刷新一次 UI 保证状态正确
         StateHasChanged();
+        return Task.CompletedTask;
     }
 
-    private JSModule? ValidateModule { get; set; }
+    /// <summary>
+    /// Gets or sets the module of validate instance.
+    /// </summary>
+    protected JSModule? ValidateModule { get; set; }
 
-    private Task<JSModule> LoadValidateModule() => JSRuntime.LoadModuleByName("validate");
+    /// <summary>
+    /// 加载 validate 模块方法
+    /// </summary>
+    /// <returns></returns>
+    protected Task<JSModule> LoadValidateModule() => JSRuntime.LoadModuleByName("validate");
 
     /// <summary>
     /// 增加客户端 Tooltip 方法

@@ -59,6 +59,7 @@ public class AutoGenerateClassTest
             ComponentType = typeof(Select<string>),
             Step = "1",
             Rows = 1,
+            Cols = 6,
             LookupStringComparison = StringComparison.Ordinal,
             LookupServiceKey = "test-lookup",
             LookupServiceData = true,
@@ -70,7 +71,8 @@ public class AutoGenerateClassTest
             HeaderTextWrap = true,
             IsMarkupString = true,
 
-            RequiredErrorMessage = "test"
+            RequiredErrorMessage = "test",
+            IgnoreWhenExport = true
         };
         Assert.Equal(1, attr.Order);
         Assert.True(attr.Ignore);
@@ -93,6 +95,7 @@ public class AutoGenerateClassTest
         Assert.Equal(typeof(Select<string>), attr.ComponentType);
         Assert.Equal("1", attr.Step);
         Assert.Equal(1, attr.Rows);
+        Assert.Equal(6, attr.Cols);
         Assert.Equal(StringComparison.Ordinal, attr.LookupStringComparison);
         Assert.Equal("Test", attr.GroupName);
         Assert.Equal(1, attr.GroupOrder);
@@ -103,6 +106,7 @@ public class AutoGenerateClassTest
         Assert.True(attr.HeaderTextEllipsis);
         Assert.Equal("test header tooltip", attr.HeaderTextTooltip);
         Assert.True(attr.IsMarkupString);
+        Assert.True(attr.IgnoreWhenExport);
 
         var attrInterface = (ITableColumn)attr;
         attrInterface.ShowLabelTooltip = true;
@@ -131,6 +135,9 @@ public class AutoGenerateClassTest
 
         attrInterface.Width = null;
         Assert.Equal(0, attr.Width);
+
+        attrInterface.IgnoreWhenExport = null;
+        Assert.False(attrInterface.IgnoreWhenExport);
 
         attrInterface.Width = -10;
         Assert.Equal(-10, attr.Width);

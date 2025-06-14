@@ -29,6 +29,11 @@ public partial class Dialog : IDisposable
     private bool _isBackdrop = false;
     private bool? _isFade = null;
 
+    private string? ClassString => CssBuilder.Default()
+        .AddClass("modal-multiple", DialogParameters.Count > 1)
+        .AddClass("show", DialogParameters.Count > 0)
+        .Build();
+
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
@@ -55,7 +60,7 @@ public partial class Dialog : IDisposable
         }
     }
 
-    private Task Show(DialogOption option)
+    private async Task Show(DialogOption option)
     {
         _onShownAsync = async () =>
         {
@@ -158,8 +163,7 @@ public partial class Dialog : IDisposable
 
         // Add ModalDialog to the container
         DialogParameters.Add(parameters, (_isKeyboard, _isBackdrop));
-        StateHasChanged();
-        return Task.CompletedTask;
+        await InvokeAsync(StateHasChanged);
     }
 
     private static RenderFragment RenderDialog(int index, Dictionary<string, object> parameter) => builder =>

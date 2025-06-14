@@ -173,11 +173,17 @@
     "CloseCurrentTabText": "关闭当前标签",
     "CloseOtherTabsText": "关闭其他标签",
     "CloseAllTabsText": "关闭所有标签",
-    "NotFoundTabText": "未找到"
-  },
-  "BootstrapBlazor.Components.MultiFilter": {
-    "MultiFilterSearchPlaceHolderText": "请输入 ...",
-    "MultiFilterSelectAllText": "全选"
+    "NotFoundTabText": "未找到",
+    "RefreshToolbarTooltipText": "刷新",
+    "FullscreenToolbarTooltipText": "全屏",
+    "PrevTabNavLinkTooltipText": "上一个标签",
+    "NextTabNavLinkTooltipText": "下一个标签",
+    "CloseTabNavLinkTooltipText": "关闭",
+    "ContextRefresh": "刷新",
+    "ContextClose": "关闭",
+    "ContextCloseOther": "关闭其他",
+    "ContextCloseAll": "关闭全部",
+    "ContextFullScreen": "全屏"
   },
   "BootstrapBlazor.Components.Table": {
     "AddButtonText": "新建",
@@ -253,7 +259,7 @@
     "CloseButtonText": "关闭",
     "SaveButtonText": "保存"
   },
-  "BootstrapBlazor.Components.TableFilter": {
+  "BootstrapBlazor.Components.TableColumnFilter": {
     "ClearButtonText": "重置",
     "FilterButtonText": "确认",
     "BoolFilter.AllText": "全部",
@@ -268,7 +274,9 @@
     "Contains": "包含",
     "NotContains": "不包含",
     "EnumFilter.AllText": "全选",
-    "NotSupportedMessage": "不支持的类型，请使用 FilterTemplate 自定义过滤组件"
+    "NotSupportedMessage": "不支持的类型，请使用 FilterTemplate 自定义过滤组件",
+    "MultiFilterSearchPlaceHolderText": "请输入 ...",
+    "MultiFilterSelectAllText": "全选"
   },
   "BootstrapBlazor.Components.FilterLogicItem": {
     "And": "并且",
@@ -306,15 +314,16 @@
     "NotSetOnTreeExpandErrorMessage": "未设置 OnExpandNodeAsync 回调委托方法"
   },
   "BootstrapBlazor.Components.TreeView": {
-    "NotSetOnTreeExpandErrorMessage": "未设置 OnExpandNodeAsync 回调委托方法"
+    "NotSetOnTreeExpandErrorMessage": "未设置 OnExpandNodeAsync 回调委托方法",
+    "ToolbarEditTitle": "节点名称编辑",
+    "ToolbarEditLabelText": "更改为"
   },
   "BootstrapBlazor.Components.UploadBase": {
     "DeleteButtonText": "删除",
     "BrowserButtonText": "浏览",
     "FileExtensions": "文件扩展名必须为以下几种格式: {0}",
     "FileSizeValidation": "文件太大，文件限制大小为 {0}",
-    "DropUploadText": "拖拽文件到此处上传",
-    "DropFooterText": ""
+    "DropUploadText": "拖拽文件到此处或者<em>点击上传</em>"
   },
   "BootstrapBlazor.Components.Handwritten": {
     "SaveButtonText": "保存",

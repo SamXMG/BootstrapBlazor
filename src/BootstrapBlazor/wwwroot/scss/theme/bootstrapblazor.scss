@@ -1,4 +1,4 @@
-// :root
+﻿// :root
 $bb-primary-color: #409eff;
 $bb-primary-color-rgb: 64, 158, 255;
 $bb-border-focus-color: #86b7fe;
@@ -21,10 +21,6 @@ $bb-anchor-link-opacity-transition: opacity .3s linear;
 
 // AutoComplete
 $bb-ac-padding-right: 30px;
-$bb-ac-menu-top: 40px;
-$bb-ac-menu-left: 0;
-$bb-ac-menu-right: 0;
-$bb-ac-menu-shadow: 0 2px 8px rgba(0, 0, 0, 0.176);
 
 // Avatar
 $bb-avatar-width: 50px;
@@ -241,7 +237,6 @@ $bb-drawer-body-padding: 1rem;
 $bb-drawer-bar-bg: rgba(var(--bs-body-color-rgb),.12);
 $bb-drawer-bar-hover-color: #409eff;
 $bb-drawer-bar-drag-color: #0969da;
-$bb-drawer-backdrop-bg: rgba(0, 0, 0, 0.5);
 
 // Dropdown
 $bb-widget-toggle-color: var(--bs-body-color);
@@ -319,6 +314,12 @@ $bb-viewer-border-radius: 50%;
 // Ip Address
 $bb-ip-cell-max-width: 30px;
 
+// OptInput
+$bb-opt-item-padding: 0 .5em;
+$bb-opt-item-margin: .5rem;
+$bb-opt-font-size: 3em;
+$bb-opt-border-width: 1px;
+
 // Layout
 $bb-layout-header-height: 50px;
 $bb-layout-header-background: #0078d4;
@@ -346,9 +347,9 @@ $bb-layout-menu-item-hover-bg: #409eff;
 $bb-layout-logo-border-color: #d5d5d5;
 $bb-layout-logo-bg: #0e77e3;
 
-// LayoutSplitebar
-$bb-splitebar-body-hover-bg: rgba(175, 184, 193, 0.2);
-$bb-splitebar-body-drag-hover-bg: rgb(9, 105, 218);
+// LayoutSplitBar
+$bb-split-bar-body-hover-bg: rgba(175, 184, 193, 0.2);
+$bb-split-bar-body-drag-hover-bg: rgb(9, 105, 218);
 
 // Light
 $bb-light-bg: radial-gradient(circle, #fff, #aaa, #333);
@@ -514,14 +515,14 @@ $bb-dropdown-link-pre-active-bg: #498ff7;
 $bb-select-focus-shadow: none;
 $bb-select-padding-right: 2.25rem;
 $bb-select-padding: 6px 0.75rem;
-$bb-select-search-padding: 7px 10px;
+$bb-select-search-padding: .5rem 1rem;
 $bb-select-search-margin-bottom: .5rem;
 $bb-select-search-border-color: var(--bs-border-color);
 $bb-select-search-padding-right: 30px;
 $bb-select-search-icon-color: var(--bb-select-search-border-color);
-$bb-select-search-icon-right: 20px;
-$bb-select-search-icon-top: 17px;
-$bb-select-search-height: 60px;
+$bb-select-search-icon-right: 26px;
+$bb-select-search-icon-top: 18px;
+$bb-select-search-height: 52px;
 $bb-select-append-width: 30px;
 $bb-select-append-color: #c0c4cc;
 
@@ -608,7 +609,7 @@ $bb-switch-inner-off-text-color: #606266;
 $bb-switch-label-margin-left: 10px;
 
 // Tab
-$bb-tabs-item-padding: 0 1rem;
+$bb-tabs-item-padding: 0 .5rem;
 $bb-tabs-item-height: 40px;
 $bb-tabs-item-active-color: #409eff;
 $bb-tabs-item-hover-color: #409eff;
@@ -688,6 +689,7 @@ $bb-tree-disabled-opacity: .5;
 
 // Upload
 $bb-upload-body-margin-top: 10px;
+$bb-upload-body-list-grap: 1rem;
 $bb-upload-body-list-max-height: 240px;
 $bb-upload-body-list-item-padding: 3px 5px;
 $bb-upload-body-list-item-body-padding: 0 5px;
@@ -696,11 +698,11 @@ $bb-upload-card-width: 240px;
 $bb-upload-card-height: 280px;
 $bb-upload-card-shadow: 0 0 10px 0 rgba(0,0,0,.2);
 $bb-upload-card-padding: 1rem;
-$bb-upload-card-margin: 0 1rem 1rem 0;
 $bb-upload-card-item-width: 168px;
 $bb-upload-drop-height: 140px;
 $bb-upload-drop-footer-font-size: 12px;
 $bb-upload-drop-footer-margin-top: .25rem;
+$bb-upload-item-border-radius: 50%;
 
 // ValidateForm
 $bb-form-control-padding: 0.375rem 0.75rem;

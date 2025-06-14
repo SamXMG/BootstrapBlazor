@@ -4,7 +4,6 @@
 // Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
@@ -236,6 +235,23 @@ public class JsonStringLocalizerTest : BootstrapBlazorTestBase
 
         var resolve = provider.GetRequiredService<ILocalizationResolve>();
         Assert.Empty(resolve.GetAllStringsByCulture(true));
+    }
+
+    [Fact]
+    public void GetString_FromBaseTypeJson()
+    {
+        var sc = new ServiceCollection();
+        sc.AddConfiguration();
+        sc.AddBootstrapBlazor();
+
+        var provider = sc.BuildServiceProvider();
+        var localizer = provider.GetRequiredService<IStringLocalizer<SubFoo>>();
+        Assert.Equal("姓名", localizer["Name"].Value);
+    }
+
+    class SubFoo : Foo
+    {
+
     }
 
     [Fact]

@@ -6,6 +6,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 
 namespace BootstrapBlazor.Components;
@@ -13,9 +14,69 @@ namespace BootstrapBlazor.Components;
 /// <summary>
 /// Layout 组件
 /// </summary>
-public partial class Layout : IHandlerException
+public partial class Layout : IHandlerException, ITabHeader
 {
     private bool IsSmallScreen { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tab style. Default is <see cref="TabStyle.Default"/>.
+    /// </summary>
+    [Parameter]
+    public TabStyle TabStyle { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether show the toolbar. Default is false.
+    /// </summary>
+    [Parameter]
+    public bool ShowToolbar { get; set; }
+
+    /// <summary>
+    /// Gets or sets the template of the toolbar button. Default is null.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<Tab>? ToolbarTemplate { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether show the full screen button. Default is true.
+    /// </summary>
+    [Parameter]
+    public bool ShowFullscreenToolbarButton { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the full screen toolbar button icon string. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? FullscreenToolbarButtonIcon { get; set; }
+
+    /// <summary>
+    /// Gets or sets the full screen toolbar button tooltip string. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? FullscreenToolbarTooltipText { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether show the full screen button. Default is true.
+    /// </summary>
+    [Parameter]
+    public bool ShowRefreshToolbarButton { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the refresh toolbar button icon string. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? RefreshToolbarButtonIcon { get; set; }
+
+    /// <summary>
+    /// Gets or sets the refresh toolbar button tooltip string. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? RefreshToolbarTooltipText { get; set; }
+
+    /// <summary>
+    /// Gets or sets the refresh toolbar button click event callback. Default is null.
+    /// </summary>
+    [Parameter]
+    public Func<Task>? OnToolbarRefreshCallback { get; set; }
 
     /// <summary>
     /// 获得/设置 侧边栏状态
@@ -70,6 +131,15 @@ public partial class Layout : IHandlerException
     /// 仅在 左右布局时有效
     /// </summary>
     [Parameter]
+    public bool ShowSplitBar { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否显示分割栏 默认 false 不显示
+    /// 仅在 左右布局时有效
+    /// </summary>
+    [Parameter]
+    [ExcludeFromCodeCoverage]
+    [Obsolete("已弃用，请使用 ShowSplitBar 单词拼写错误；Deprecated. Please use 'ShowSplitBar' instead. The word 'Splitebar' is misspelled.")]
     public bool ShowSplitebar { get; set; }
 
     /// <summary>
@@ -202,7 +272,7 @@ public partial class Layout : IHandlerException
     public Func<bool, Task>? OnCollapsed { get; set; }
 
     /// <summary>
-    /// 获得/设置 默认标签页 关闭所以标签页时自动打开此地址 默认 null 未设置
+    /// 获得/设置 默认标签页 关闭所有标签页时自动打开此地址 默认 null 未设置
     /// </summary>
     [Parameter]
     public string TabDefaultUrl { get; set; } = "";
@@ -236,6 +306,60 @@ public partial class Layout : IHandlerException
     /// </summary>
     [Parameter]
     public string NotAuthorizeUrl { get; set; } = "/Account/Login";
+
+    /// <summary>
+    /// Gets or sets whether enable tab context menu. Default is false.
+    /// </summary>
+    [Parameter]
+    public bool ShowTabContextMenu { get; set; }
+
+    /// <summary>
+    /// Gets or sets the template of before tab context menu. Default is null.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<Tab>? BeforeTabContextMenuTemplate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the template of tab context menu. Default is null.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<Tab>? TabContextMenuTemplate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon of tab item context menu refresh button. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? TabContextMenuRefreshIcon { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon of tab item context menu close button. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? TabContextMenuCloseIcon { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon of tab item context menu close other button. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? TabContextMenuCloseOtherIcon { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon of tab item context menu close all button. Default is null.
+    /// </summary>
+    [Parameter]
+    public string? TabContextMenuCloseAllIcon { get; set; }
+
+    /// <summary>
+    /// Gets or sets before popup context menu callback. Default is null.
+    /// </summary>
+    [Parameter]
+    public Func<TabItem, Task<bool>>? OnBeforeShowContextMenu { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether show the tab in header. Default is false.
+    /// </summary>
+    [Parameter]
+    public bool ShowTabInHeader { get; set; }
 
     [Inject]
     [NotNull]
@@ -309,14 +433,12 @@ public partial class Layout : IHandlerException
     /// 获得/设置 Gets or sets a collection of additional assemblies that should be searched for components that can match URIs.
     /// </summary>
     [Parameter]
-    [NotNull]
     public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
 
     /// <summary>
     /// 获得/设置 鼠标悬停提示文字信息
     /// </summary>
     [Parameter]
-    [NotNull]
     public string? TooltipText { get; set; }
 
     /// <summary>
@@ -332,6 +454,30 @@ public partial class Layout : IHandlerException
     public object? Resource { get; set; }
 
     /// <summary>
+    /// 获得/设置 是否开启全局异常捕获 默认 null 读取配置文件 EnableErrorLogger 值
+    /// </summary>
+    [Parameter]
+    public bool? EnableErrorLogger { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否显示 Error 提示弹窗 默认 null 使用 <see cref="BootstrapBlazorOptions.ShowErrorLoggerToast"/> 设置值
+    /// </summary>
+    [Parameter]
+    public bool? ShowErrorLoggerToast { get; set; }
+
+    /// <summary>
+    /// 获得/设置 错误日志 <see cref="Toast"/> 弹窗标题 默认 null
+    /// </summary>
+    [Parameter]
+    public string? ErrorLoggerToastTitle { get; set; }
+
+    /// <summary>
+    /// 获得/设置 自定义错误处理回调方法
+    /// </summary>
+    [Parameter]
+    public Func<ILogger, Exception, Task>? OnErrorHandleAsync { get; set; }
+
+    /// <summary>
     /// 获得 登录授权信息
     /// </summary>
     [CascadingParameter]
@@ -344,7 +490,18 @@ public partial class Layout : IHandlerException
     [NotNull]
     private IStringLocalizer<Layout>? Localizer { get; set; }
 
-    private bool _init { get; set; }
+    [Inject]
+    [NotNull]
+    private IOptionsMonitor<BootstrapBlazorOptions>? Options { get; set; }
+
+    private bool _init;
+    private LayoutHeader? _layoutHeader = null;
+
+    private ITabHeader? TabHeader => ShowTabInHeader ? this : null;
+
+    private bool _enableErrorLogger => EnableErrorLogger ?? Options.CurrentValue.EnableErrorLogger;
+
+    private bool _showToast => ShowErrorLoggerToast ?? Options.CurrentValue.ShowErrorLoggerToast;
 
     /// <summary>
     /// <inheritdoc/>
@@ -374,9 +531,9 @@ public partial class Layout : IHandlerException
         if (AuthenticationStateTask != null)
         {
             // wasm 模式下 开启权限必须提供 AdditionalAssemblies 参数
-            AdditionalAssemblies ??= new[] { Assembly.GetEntryAssembly()! };
+            AdditionalAssemblies ??= [Assembly.GetEntryAssembly()!];
 
-            var url = Navigation.ToBaseRelativePath(Navigation.Uri);
+            var url = Navigation.ToBaseRelativePathWithoutQueryAndFragment();
             var context = RouteTableFactory.Create(AdditionalAssemblies, url);
             if (context.Handler != null)
             {
@@ -501,13 +658,22 @@ public partial class Layout : IHandlerException
         await TriggerCollapseChanged();
     }
 
+    private ErrorLogger? _errorLogger;
+
+    private Task OnErrorLoggerInitialized(ErrorLogger logger)
+    {
+        _errorLogger = logger;
+        _errorLogger.Register(this);
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// 上次渲染错误内容
     /// </summary>
     private RenderFragment? _errorContent;
 
     /// <summary>
-    /// HandlerException 错误处理方法
+    /// <inheritdoc/>
     /// </summary>
     /// <param name="ex"></param>
     /// <param name="errorContent"></param>
@@ -520,6 +686,29 @@ public partial class Layout : IHandlerException
 
     private string? GetTargetString() => IsFixedTabHeader ? ".tabs-body" : null;
 
+    private RenderFragment RenderTabHeader() => builder =>
+    {
+        builder.OpenComponent<LayoutHeader>(0);
+        builder.AddComponentReferenceCapture(1, instance => _layoutHeader = (LayoutHeader)instance);
+        builder.CloseComponent();
+    };
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <param name="renderFragment"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    public void Render(RenderFragment renderFragment)
+    {
+        _layoutHeader?.Render(renderFragment);
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <returns></returns>
+    public string GetId() => $"{Id}_tab_header";
+
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
@@ -531,6 +720,7 @@ public partial class Layout : IHandlerException
 
         if (disposing)
         {
+            _errorLogger?.UnRegister(this);
             ErrorLogger?.UnRegister(this);
             if (SubscribedLocationChangedEvent)
             {

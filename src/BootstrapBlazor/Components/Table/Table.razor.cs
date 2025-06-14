@@ -38,7 +38,8 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     /// <summary>
     /// 获得/设置 内置虚拟化组件实例
     /// </summary>
-    protected Virtualize<TItem>? VirtualizeElement { get; set; }
+    [NotNull]
+    private Virtualize<TItem>? _virtualizeElement = null;
 
     /// <summary>
     /// 获得 Table 组件样式表
@@ -132,6 +133,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         .Build();
 
     private string? LineCellClassString => CssBuilder.Default("table-cell")
+        .AddClass("col-line-no")
         .AddClass(LineNoColumnAlignment.ToDescriptionString())
         .Build();
 
@@ -247,6 +249,12 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     /// </summary>
     [Parameter]
     public bool IsExcel { get; set; }
+
+    /// <summary>
+    /// 获得/设置 是否启用 Excel 模式下的键盘导航功能 默认 true
+    /// </summary>
+    [Parameter]
+    public bool EnableKeyboardNavigationCell { get; set; } = true;
 
     /// <summary>
     /// 获得/设置 是否显示明细行 默认为 null 为空时使用 <see cref="DetailRowTemplate" /> 进行逻辑判断
@@ -368,6 +376,13 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     /// <remarks>需要设置 <see cref="ScrollMode"/> 值为 Virtual 时生效</remarks>
     [Parameter]
     public float RowHeight { get; set; } = 38f;
+
+    /// <summary>
+    /// Gets or sets the overscan count for virtual scrolling. Default is 10.
+    /// </summary>
+    /// <remarks>Effective when <see cref="ScrollMode"/> is set to <see cref="ScrollMode.Virtual"/>.</remarks>
+    [Parameter]
+    public int OverscanCount { get; set; } = 10;
 
     [Inject]
     [NotNull]
@@ -744,6 +759,12 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     [Parameter]
     public Func<List<TItem>, bool>? DisableEditButtonCallback { get; set; }
 
+    /// <summary>
+    /// 获得/设置 翻页时是否自动滚动到顶部 默认 false
+    /// </summary>
+    [Parameter]
+    public bool IsAutoScrollTopWhenClickPage { get; set; }
+
     [CascadingParameter]
     private ContextMenuZone? ContextMenuZone { get; set; }
 
@@ -908,6 +929,11 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     {
         base.OnParametersSet();
 
+        if (ScrollMode == ScrollMode.Virtual && IsTree)
+        {
+            throw new InvalidOperationException($"{GetType()} does not support virtual scrolling in tree mode. ${GetType()} 目前不支持虚拟滚动模式下设置 IsTree=\"true\"");
+        }
+
         OnInitParameters();
 
         if (Items != null && OnQueryAsync != null)
@@ -922,7 +948,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
             IsPagination = false;
         }
 
-        RowsCache = null;
+        _rowsCache = null;
 
         if (IsExcel)
         {
@@ -992,6 +1018,13 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
         if (_isFilterTrigger)
         {
             _isFilterTrigger = false;
+            _shouldScrollTop = false;
+            await InvokeVoidAsync("scrollTo", Id);
+        }
+
+        if(_shouldScrollTop)
+        {
+            _shouldScrollTop = false;
             await InvokeVoidAsync("scrollTo", Id);
         }
 
@@ -1035,12 +1068,13 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
                     },
                     new
                     {
-                        Key = "align-left",
+                        Key = "align-right",
                         Icon = "fa-solid fa-align-right",
                         Text = Localizer["AlignRightText"].Value,
                         Tooltip = Localizer["AlignRightTooltipText"].Value
                     }
-                }
+                },
+                EnableKeyboardNavigationCell
             });
         }
 
@@ -1261,7 +1295,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     private IEnumerable<TItem> QueryItems { get; set; } = [];
 
     [NotNull]
-    private List<TItem>? RowsCache { get; set; }
+    private List<TItem>? _rowsCache = null;
 
     /// <summary>
     /// 获得 当前表格所有 Rows 集合
@@ -1273,8 +1307,8 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
             // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I5JG5D
             // 如果 QueryItems 无默认值
             // 页面 OnInitializedAsync 二刷再 OnAfterRender 过程中导致 QueryItems 变量为空 ToList 报错
-            RowsCache ??= IsTree ? TreeRows.GetAllItems() : [.. (Items ?? QueryItems)];
-            return RowsCache;
+            _rowsCache ??= IsTree ? TreeRows.GetAllItems() : [.. (Items ?? QueryItems)];
+            return _rowsCache;
         }
     }
 
@@ -1319,7 +1353,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
             : col.Template(item);
 
         RenderFragment RenderEditTemplate() => col.EditTemplate == null
-            ? new RenderFragment(builder => builder.CreateComponentByFieldType(this, col, item, changedType, false, col.GetLookupService(InjectLookupService)))
+            ? new RenderFragment(builder => builder.CreateComponentByFieldType(this, col, item, changedType, isSearch: false, col.GetLookupService(InjectLookupService), skipValidate: true))
             : col.EditTemplate(item);
     }
 
@@ -1361,7 +1395,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
                     parameters.Add(new(nameof(ValidateBase<string>.OnValueChanged), onValueChanged.Invoke(d, col, (model, column, val) => DynamicContext.OnValueChanged(model, column, val))));
                     col.ComponentParameters = parameters;
                 }
-                builder.CreateComponentByFieldType(this, col, row, changedType, false, col.GetLookupService(InjectLookupService));
+                builder.CreateComponentByFieldType(this, col, row, changedType, false, col.GetLookupService(InjectLookupService), skipValidate: true);
             };
         }
 
@@ -1566,7 +1600,7 @@ public partial class Table<TItem> : ITable, IModelEqualityComparer<TItem> where 
     [JSInvokable]
     public async Task ResizeColumnCallback(int index, float width)
     {
-        var column = GetVisibleColumns().Where(i => !i.Fixed).ElementAtOrDefault(index);
+        var column = GetVisibleColumns().ElementAtOrDefault(index);
         if (column != null && OnResizeColumnAsync != null)
         {
             await OnResizeColumnAsync(column.GetFieldName(), width);

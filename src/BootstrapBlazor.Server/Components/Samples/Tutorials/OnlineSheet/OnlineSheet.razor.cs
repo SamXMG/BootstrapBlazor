@@ -44,7 +44,7 @@ public partial class OnlineSheet : IDisposable
 
             _data = new UniverSheetData()
             {
-                Data = sheetData
+                WorkbookData = sheetData
             };
         }
     }
@@ -76,8 +76,6 @@ public partial class OnlineSheet : IDisposable
                 Delay = 3000,
                 ForceDelay = true
             });
-
-            DispatchService.UnSubscribe(Dispatch);
 
             await _sheetExcel.PushDataAsync(entry.Entry.Data);
         }

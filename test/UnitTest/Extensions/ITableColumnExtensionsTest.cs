@@ -59,6 +59,7 @@ public class ITableColumnExtensionsTest
             IsReadonlyWhenEdit = true,
             Readonly = true,
             Rows = 3,
+            Cols = 6,
             SkipValidate = true,
             Text = "Test",
             ValidateRules = [new RequiredValidator()],
@@ -72,7 +73,7 @@ public class ITableColumnExtensionsTest
             CssClass = "test-css",
             DefaultSort = true,
             DefaultSortOrder = SortOrder.Desc,
-            Filter = new TableFilter(),
+            Filter = new TableColumnFilter(),
             Filterable = true,
             FilterTemplate = builder => builder.AddContent(0, "test-filter"),
             Fixed = true,
@@ -130,6 +131,7 @@ public class ITableColumnExtensionsTest
         Assert.False(col.IsVisibleWhenEdit);
         Assert.True(col.Readonly);
         Assert.Equal(3, col.Rows);
+        Assert.Equal(6, col.Cols);
         Assert.True(col.SkipValidate);
         Assert.Equal("Test", col.Text);
         Assert.NotNull(col.ValidateRules);

@@ -41,17 +41,13 @@ public sealed partial class Selects
     [NotNull]
     private IStringLocalizer<Foo>? LocalizerFoo { get; set; }
 
-    private bool _showSearch;
-
+    private bool _showSearch = true;
     private bool _showPopoverSearch = true;
-
-    private bool _isShowSearchClearable;
-
-    private bool _isClearable;
-
+    private bool _isShowSearchClearable = true;
+    private bool _isClearable = true;
     private string? _fooName;
 
-    private List<SelectedItem> _enumValueDemoItems = [
+    private readonly List<SelectedItem> _enumValueDemoItems = [
         new("0", "Primary"),
         new("1", "Middle")
     ];
@@ -101,7 +97,18 @@ public sealed partial class Selects
 
     private Foo BindingModel { get; set; } = new Foo();
 
-    private Foo ClearableModel { get; set; } = new Foo();
+    private MockModel ClearableModel { get; set; } = new();
+
+    class MockModel
+    {
+        public string? NullableName { get; set; }
+
+        public string Name { get; set; } = "";
+
+        public int Count { get; set; } = 1;
+
+        public int? NullableCount { get; set; }
+    }
 
     private SelectedItem? Item { get; set; }
 
@@ -230,6 +237,14 @@ public sealed partial class Selects
         new("abcde", "abcde")
     ];
 
+    private readonly SelectedItem[] IntItems =
+    [
+        new("1", "1"),
+        new("12", "12"),
+        new("123", "123"),
+        new("1234", "1234")
+    ];
+
     private static Task<bool> OnBeforeSelectedItemChange(SelectedItem item)
     {
         return Task.FromResult(true);
@@ -301,6 +316,14 @@ public sealed partial class Selects
         {
             Name = "ShowSearch",
             Description = Localizer["SelectsShowSearch"],
+            Type = "bool",
+            ValueList = "true|false",
+            DefaultValue = "false"
+        },
+        new()
+        {
+            Name = "IsAutoClearSearchTextWhenCollapsed",
+            Description = Localizer["SelectsIsAutoClearSearchTextWhenCollapsed"],
             Type = "bool",
             ValueList = "true|false",
             DefaultValue = "false"
@@ -400,6 +423,30 @@ public sealed partial class Selects
             Type = "bool",
             ValueList = "true|false",
             DefaultValue = "false"
+        },
+        new()
+        {
+            Name = nameof(Select<string>.IsVirtualize),
+            Description = Localizer["SelectsIsVirtualize"],
+            Type = "bool",
+            ValueList = "true|false",
+            DefaultValue = "false"
+        },
+        new()
+        {
+            Name = nameof(Select<string>.DefaultVirtualizeItemText),
+            Description = Localizer["SelectsDefaultVirtualizeItemText"],
+            Type = "string",
+            ValueList = " — ",
+            DefaultValue = " — "
+        },
+        new()
+        {
+            Name = nameof(Select<string>.ShowSwal),
+            Description = Localizer["SelectsShowSwal"],
+            Type = "bool",
+            ValueList = "true|false",
+            DefaultValue = "true"
         }
     ];
 }

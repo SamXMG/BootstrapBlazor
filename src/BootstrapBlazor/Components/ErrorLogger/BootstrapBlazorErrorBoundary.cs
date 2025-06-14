@@ -5,7 +5,9 @@
 
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace BootstrapBlazor.Components;
 
@@ -30,6 +32,10 @@ class BootstrapBlazorErrorBoundary : ErrorBoundaryBase
     [NotNull]
     private NavigationManager? NavigationManager { get; set; }
 
+    [Inject]
+    [NotNull]
+    private IHostEnvironment? HostEnvironment { get; set; }
+
     /// <summary>
     /// 获得/设置 自定义错误处理回调方法
     /// </summary>
@@ -53,22 +59,10 @@ class BootstrapBlazorErrorBoundary : ErrorBoundaryBase
     /// <inheritdoc/>
     /// </summary>
     /// <param name="exception"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    protected override async Task OnErrorAsync(Exception exception)
+    protected override Task OnErrorAsync(Exception exception)
     {
-        // 由框架调用
-        if (OnErrorHandleAsync != null)
-        {
-            await OnErrorHandleAsync(Logger, exception);
-            return;
-        }
-
-        if (ShowToast)
-        {
-            await ToastService.Error(ToastTitle, exception.Message);
-        }
         Logger.LogError(exception, "{BootstrapBlazorErrorBoundary} {OnErrorAsync} log this error occurred at {Page}", nameof(BootstrapBlazorErrorBoundary), nameof(OnErrorAsync), NavigationManager.Uri);
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -77,16 +71,38 @@ class BootstrapBlazorErrorBoundary : ErrorBoundaryBase
     /// <param name="builder"></param>
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
-        if (OnErrorHandleAsync == null)
+        // 页面生命周期内异常直接调用这里
+        var ex = CurrentException ?? _exception;
+        if (ex != null)
         {
-            var ex = CurrentException ?? _exception;
-            if (ex != null)
+            // 处理自定义异常逻辑
+            if (OnErrorHandleAsync != null)
             {
-                _exception = null;
-                builder.AddContent(0, ExceptionContent(ex));
+                _ = OnErrorHandleAsync(Logger, ex);
+                return;
             }
+
+            // 渲染异常内容
+            builder.AddContent(0, ExceptionContent(ex));
+
+            // 重置 CurrentException
+            ResetException();
         }
-        builder.AddContent(1, ChildContent);
+        else
+        {
+            // 渲染正常内容
+            builder.AddContent(1, ChildContent);
+        }
+    }
+
+    private PropertyInfo? _currentExceptionPropertyInfo;
+
+    private void ResetException()
+    {
+        _exception = null;
+
+        _currentExceptionPropertyInfo ??= GetType().BaseType!.GetProperty(nameof(CurrentException), BindingFlags.NonPublic | BindingFlags.Instance)!;
+        _currentExceptionPropertyInfo.SetValue(this, null);
     }
 
     private Exception? _exception = null;
@@ -118,20 +134,48 @@ class BootstrapBlazorErrorBoundary : ErrorBoundaryBase
     }
 
     /// <summary>
-    /// 渲染异常信息方法
+    /// BootstrapBlazor 组件导致异常渲染方法
     /// </summary>
     /// <param name="exception"></param>
     /// <param name="handler"></param>
     public async Task RenderException(Exception exception, IHandlerException? handler)
     {
-        if (handler != null)
+        // 外部调用
+        if (OnErrorHandleAsync != null)
         {
-            await handler.HandlerException(exception, ExceptionContent);
+            await OnErrorHandleAsync(Logger, exception);
             return;
         }
 
+        // 记录日志
         await OnErrorAsync(exception);
+
+        if (handler != null)
+        {
+            if (HostEnvironment.IsDevelopment())
+            {
+                // IHandlerException 处理异常逻辑
+                await handler.HandlerException(exception, ExceptionContent);
+            }
+            else
+            {
+                // 非开发模式下弹窗提示错误信息
+                await ToastService.Error(ToastTitle, exception.Message);
+            }
+            return;
+        }
+
+        // 显示异常信息
+        await ShowErrorToast(exception);
         _exception = exception;
         StateHasChanged();
+    }
+
+    private async Task ShowErrorToast(Exception exception)
+    {
+        if (ShowToast)
+        {
+            await ToastService.Error(ToastTitle, exception.Message);
+        }
     }
 }

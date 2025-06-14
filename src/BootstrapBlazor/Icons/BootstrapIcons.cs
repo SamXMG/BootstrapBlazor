@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace BootstrapBlazor.Components;
 
@@ -8,10 +9,7 @@ internal static class BootstrapIcons
 {
     public static Dictionary<ComponentIcons, string> Icons => new()
     {
-        // AnchorLink 组件
         { ComponentIcons.AnchorLinkIcon, "bi bi-link-45deg" },
-
-        // Avatar 组件
         { ComponentIcons.AvatarIcon, "bi bi-person-fill" },
         { ComponentIcons.AutoFillIcon, "bi bi-chevron-up" },
         { ComponentIcons.AutoCompleteIcon, "bi bi-chevron-up" },
@@ -23,6 +21,7 @@ internal static class BootstrapIcons
         { ComponentIcons.CameraPlayIcon, "bi bi-circle-play" },
         { ComponentIcons.CameraStopIcon, "bi bi-circle-stop" },
         { ComponentIcons.CameraPhotoIcon, "bi bi-camera" },
+
         { ComponentIcons.CardCollapseIcon, "bi bi-arrow-right-circle-fill" },
         { ComponentIcons.CarouselPreviousIcon, "bi bi-chevron-left" },
         { ComponentIcons.CarouselNextIcon, "bi bi-chevron-right" },
@@ -30,16 +29,15 @@ internal static class BootstrapIcons
         { ComponentIcons.CascaderSubMenuIcon, "bi bi-chevron-down" },
         { ComponentIcons.ConsoleClearButtonIcon, "bi bi-x" },
 
-        // DateTimePicker 组件
         { ComponentIcons.DatePickBodyPreviousYearIcon, "bi bi-chevron-double-left" },
         { ComponentIcons.DatePickBodyPreviousMonthIcon, "bi bi-chevron-left" },
         { ComponentIcons.DatePickBodyNextMonthIcon, "bi bi-chevron-right" },
         { ComponentIcons.DatePickBodyNextYearIcon, "bi bi-chevron-double-right" },
         { ComponentIcons.DateTimePickerIcon, "bi bi-calendar" },
+
         { ComponentIcons.TimePickerCellUpIcon, "bi bi-chevron-up" },
         { ComponentIcons.TimePickerCellDownIcon, "bi bi-chevron-down" },
 
-        // DateTimeRange 组件
         { ComponentIcons.DateTimeRangeIcon, "bi bi-calendar-range" },
         { ComponentIcons.DateTimeRangeClearIcon, "bi bi-x-circle" },
 
@@ -88,6 +86,12 @@ internal static class BootstrapIcons
         { ComponentIcons.InputNumberPlusIcon, "bi bi-plus-circle" },
 
         { ComponentIcons.LayoutMenuBarIcon, "bi bi-list" },
+        { ComponentIcons.TabContextMenuRefreshIcon, "bi bi-arrow-clockwise" },
+        { ComponentIcons.TabContextMenuCloseIcon, "bi bi-x" },
+        { ComponentIcons.TabContextMenuCloseOtherIcon, "bi bi-arrow" },
+        { ComponentIcons.TabContextMenuCloseAllIcon, "bi bi-arrow-left-right" },
+        { ComponentIcons.TabContextMenuFullScreenIcon, "bi bi-arrows-fullscreen" },
+
         { ComponentIcons.LogoutLinkIcon, "bi bi-box-arrow-right" },
 
         { ComponentIcons.LoadingIcon, "bi bi-arrow-clockwise bi-spin" },
@@ -109,7 +113,8 @@ internal static class BootstrapIcons
         { ComponentIcons.RibbonTabArrowPinIcon, "bi bi-pin bi-pin-angle" },
 
         { ComponentIcons.MultiSelectDropdownIcon, "bi bi-chevron-up" },
-        { ComponentIcons.MultiSelectClearIcon, "bi bi-x" },
+        { ComponentIcons.MultiSelectCloseIcon, "bi bi-x" },
+        { ComponentIcons.MultiSelectClearIcon, "bi bi-x-circle" },
 
         { ComponentIcons.SelectTreeDropdownIcon, "bi bi-chevron-up" },
 
@@ -135,6 +140,7 @@ internal static class BootstrapIcons
         { ComponentIcons.TabNextIcon, "bi bi-chevron-right" },
         { ComponentIcons.TabDropdownIcon, "bi bi-chevron-down" },
         { ComponentIcons.TabCloseIcon, "bi bi-x" },
+        { ComponentIcons.TabRefreshButtonIcon, "bi bi-arrow-clockwise" },
 
         { ComponentIcons.TableColumnToolboxIcon, "bi bi-gear" },
 
@@ -178,6 +184,7 @@ internal static class BootstrapIcons
         { ComponentIcons.TreeViewSearchIcon, "bi bi-search" },
         { ComponentIcons.TreeViewResetSearchIcon, "bi bi-backspace" },
         { ComponentIcons.TreeViewLoadingIcon, "bi bi-arrow-clockwise bi-spin" },
+        { ComponentIcons.TreeViewToolbarEditButton, "bi bi-check2-square" },
 
         // Upload
         { ComponentIcons.AvatarUploadDeleteIcon, "bi bi-trash3" },
@@ -187,23 +194,21 @@ internal static class BootstrapIcons
         { ComponentIcons.AvatarUploadInvalidStatusIcon, "bi bi-x bi-rotate-315" },
 
         { ComponentIcons.ButtonUploadBrowserButtonIcon, "bi bi-folder2-open" },
-        { ComponentIcons.ButtonUploadLoadingIcon, "bi bi-arrow-clockwise bi-spin" },
-        { ComponentIcons.ButtonUploadInvalidStatusIcon, "bi bi-x-circle" },
-        { ComponentIcons.ButtonUploadValidStatusIcon, "bi bi-check-circle" },
-        { ComponentIcons.ButtonUploadDeleteIcon, "bi bi-trash3" },
-        { ComponentIcons.ButtonUploadDownloadIcon, "bi bi-cloud-download" },
 
         { ComponentIcons.InputUploadBrowserButtonIcon, "bi bi-folder-open" },
         { ComponentIcons.InputUploadDeleteButtonIcon, "bi bi-trash3" },
 
         { ComponentIcons.CardUploadAddIcon, "bi bi-plus" },
         { ComponentIcons.CardUploadStatusIcon, "bi bi-check bi-rotate-315" },
-        { ComponentIcons.CardUploadDeleteIcon, "bi bi-x bi-rotate-315" },
         { ComponentIcons.CardUploadRemoveIcon, "bi bi-trash3" },
-        { ComponentIcons.CardUploadDownloadIcon, "bi bi-cloud-download" },
         { ComponentIcons.CardUploadZoomIcon, "bi bi-search" },
         { ComponentIcons.UploadCancelIcon, "bi bi-cancel" },
         { ComponentIcons.DropUploadIcon, "bi bi-cloud-arrow-up-fill" },
+        { ComponentIcons.UploadLoadingIcon, "bi bi-arrow-clockwise bi-spin" },
+        { ComponentIcons.UploadInvalidStatusIcon, "bi bi-x-circle" },
+        { ComponentIcons.UploadValidStatusIcon, "bi bi-check-circle" },
+        { ComponentIcons.UploadDownloadIcon, "bi bi-cloud-download" },
+        { ComponentIcons.UploadDeleteIcon, "bi bi-x bi-rotate-315" },
 
         { ComponentIcons.FileIconExcel, "bi bi-filetype-xlsx" },
         { ComponentIcons.FileIconDocx, "bi bi-filetype-docx" },

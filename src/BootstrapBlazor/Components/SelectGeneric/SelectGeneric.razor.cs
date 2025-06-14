@@ -3,15 +3,13 @@
 // See the LICENSE file in the project root for more information.
 // Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.Extensions.Localization;
-using System.ComponentModel.DataAnnotations;
 
 namespace BootstrapBlazor.Components;
 
 /// <summary>
-/// Select 组件实现类
+/// Select 泛型组件实现类
 /// </summary>
 /// <typeparam name="TValue"></typeparam>
 [CascadingTypeParameter(nameof(TValue))]
@@ -25,7 +23,7 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
     /// 获得 样式集合
     /// </summary>
     private string? ClassString => CssBuilder.Default("select dropdown")
-        .AddClass("cls", IsClearable)
+        .AddClass("is-clearable", IsClearable)
         .AddClassFromAttributes(AdditionalAttributes)
         .Build();
 
@@ -39,14 +37,6 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
         .AddClass(CssClass).AddClass(ValidCss)
         .Build();
 
-    private string? ClearClassString => CssBuilder.Default("clear-icon")
-        .AddClass($"text-{Color.ToDescriptionString()}", Color != Color.None)
-        .AddClass($"text-success", IsValid.HasValue && IsValid.Value)
-        .AddClass($"text-danger", IsValid.HasValue && !IsValid.Value)
-        .Build();
-
-    private bool GetClearable() => IsClearable && !IsDisabled;
-
     /// <summary>
     /// 设置当前项是否 Active 方法
     /// </summary>
@@ -57,30 +47,13 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
         .AddClass("disabled", item.IsDisabled)
         .Build();
 
-    private string? SearchClassString => CssBuilder.Default("search")
-        .AddClass("is-fixed", IsFixedSearch)
-        .Build();
-
     private readonly List<SelectedItem<TValue>> _children = [];
-
-    /// <summary>
-    /// 获得/设置 右侧清除图标 默认 fa-solid fa-angle-up
-    /// </summary>
-    [Parameter]
-    [NotNull]
-    public string? ClearIcon { get; set; }
 
     /// <summary>
     /// 获得/设置 搜索文本发生变化时回调此方法
     /// </summary>
     [Parameter]
     public Func<string, IEnumerable<SelectedItem<TValue>>>? OnSearchTextChanged { get; set; }
-
-    /// <summary>
-    /// 获得/设置 是否固定下拉框中的搜索栏 默认 false
-    /// </summary>
-    [Parameter]
-    public bool IsFixedSearch { get; set; }
 
     /// <summary>
     /// 获得/设置 是否可编辑 默认 false
@@ -97,16 +70,11 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
 
     /// <summary>
     /// 获得/设置 选项输入更新后转换为 Value 回调方法 默认 null
+    /// <para>返回值为 null 时放弃操作</para>
     /// </summary>
     /// <remarks>设置 <see cref="IsEditable"/> 后生效</remarks>
     [Parameter]
-    public Func<string, Task<TValue>>? TextConvertToValueCallback { get; set; }
-
-    /// <summary>
-    /// 获得/设置 是否可清除 默认 false
-    /// </summary>
-    [Parameter]
-    public bool IsClearable { get; set; }
+    public Func<string, Task<TValue?>>? TextConvertToValueCallback { get; set; }
 
     /// <summary>
     /// 获得/设置 选项模板支持静态数据
@@ -119,39 +87,6 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
     /// </summary>
     [Parameter]
     public RenderFragment<SelectedItem<TValue>?>? DisplayTemplate { get; set; }
-
-    /// <summary>
-    /// 获得/设置 是否开启虚拟滚动 默认 false 未开启 注意：开启虚拟滚动后不支持 <see cref="SelectBase{TValue}.ShowSearch"/> <see cref="PopoverSelectBase{TValue}.IsPopover"/> <seealso cref="IsFixedSearch"/> 参数设置，设置初始值时请设置 <see cref="DefaultVirtualizeItemText"/>
-    /// </summary>
-    [Parameter]
-    public bool IsVirtualize { get; set; }
-
-    /// <summary>
-    /// 获得/设置 虚拟滚动行高 默认为 33
-    /// </summary>
-    /// <remarks>需要设置 <see cref="IsVirtualize"/> 值为 true 时生效</remarks>
-    [Parameter]
-    public float RowHeight { get; set; } = 33f;
-
-    /// <summary>
-    /// 获得/设置 过载阈值数 默认为 4
-    /// </summary>
-    /// <remarks>需要设置 <see cref="IsVirtualize"/> 值为 true 时生效</remarks>
-    [Parameter]
-    public int OverscanCount { get; set; } = 4;
-
-    /// <summary>
-    /// 获得/设置 默认文本 <see cref="IsVirtualize"/> 时生效 默认 null
-    /// </summary>
-    /// <remarks>开启 <see cref="IsVirtualize"/> 并且通过 <see cref="OnQueryAsync"/> 提供数据源时，由于渲染时还未调用或者调用后数据集未包含 <see cref="DisplayBase{TValue}.Value"/> 选项值，此时使用 DefaultText 值渲染</remarks>
-    [Parameter]
-    public string? DefaultVirtualizeItemText { get; set; }
-
-    /// <summary>
-    /// 获得/设置 清除文本内容 OnClear 回调方法 默认 null
-    /// </summary>
-    [Parameter]
-    public Func<Task>? OnClearAsync { get; set; }
 
     /// <summary>
     /// 获得/设置 禁止首次加载时触发 OnSelectedItemChanged 回调方法 默认 false
@@ -254,13 +189,6 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
 
     private ItemsProviderResult<SelectedItem<TValue>> _result;
 
-    /// <summary>
-    /// 获得 SearchLoadingIcon 图标字符串
-    /// </summary>
-    private string? SearchLoadingIconString => CssBuilder.Default("icon searching-icon")
-        .AddClass(SearchLoadingIcon)
-        .Build();
-
     private string? ScrollIntoViewBehaviorString => ScrollIntoViewBehavior == ScrollIntoViewBehavior.Smooth ? null : ScrollIntoViewBehavior.ToDescriptionString();
 
     /// <summary>
@@ -277,7 +205,7 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
         }
     }
 
-    private SelectedItem<TValue> SelectedRow
+    private SelectedItem<TValue>? SelectedRow
     {
         get
         {
@@ -286,17 +214,35 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
         }
     }
 
-    private SelectedItem<TValue> GetSelectedRow()
+    private SelectedItem<TValue>? GetSelectedRow()
     {
+        if (Value is null)
+        {
+            _init = false;
+            return null;
+        }
+
+        if (IsVirtualize)
+        {
+            _init = false;
+            return new SelectedItem<TValue>(default!, CurrentValueAsString);
+        }
+
         var item = Rows.Find(i => Equals(i.Value, Value))
             ?? Rows.Find(i => i.Active)
-            ?? Rows.Where(i => !i.IsDisabled).FirstOrDefault()
-            ?? new SelectedItem<TValue>(Value, DefaultVirtualizeItemText!);
+            ?? Rows.Where(i => !i.IsDisabled).FirstOrDefault();
 
-        if (!_init || !DisableItemChangedWhenFirstRender)
+        if (item != null)
         {
-            _ = SelectedItemChanged(item);
-            _init = false;
+            if (_init && DisableItemChangedWhenFirstRender)
+            {
+
+            }
+            else
+            {
+                _ = SelectedItemChanged(item);
+                _init = false;
+            }
         }
         return item;
     }
@@ -312,7 +258,7 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
     private List<SelectedItem<TValue>> GetRowsBySearch()
     {
         var items = OnSearchTextChanged?.Invoke(SearchText) ?? FilterBySearchText(GetRowsByItems());
-        return items.ToList();
+        return [.. items];
     }
 
     private IEnumerable<SelectedItem<TValue>> FilterBySearchText(IEnumerable<SelectedItem<TValue>> source) => string.IsNullOrEmpty(SearchText)
@@ -363,7 +309,7 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
     /// </summary>
     private int TotalCount { get; set; }
 
-    private List<SelectedItem<TValue>> GetVirtualItems() => FilterBySearchText(GetRowsByItems()).ToList();
+    private List<SelectedItem<TValue>> GetVirtualItems() => [.. FilterBySearchText(GetRowsByItems())];
 
     /// <summary>
     /// 虚拟滚动数据加载回调方法
@@ -385,13 +331,6 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
         return _result;
 
         int GetCountByTotal() => TotalCount == 0 ? request.Count : Math.Min(request.Count, TotalCount - request.StartIndex);
-    }
-
-    private async Task SearchTextChanged(string val)
-    {
-        SearchText = val;
-        _itemsCache = null;
-        await RefreshVirtualizeElement();
     }
 
     private async Task RefreshVirtualizeElement()
@@ -432,7 +371,9 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
     [JSInvokable]
     public async Task TriggerOnSearch(string searchText)
     {
-        await SearchTextChanged(searchText);
+        _itemsCache = null;
+        SearchText = searchText;
+        await RefreshVirtualizeElement();
         StateHasChanged();
     }
 
@@ -521,35 +462,18 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
     public void Add(SelectedItem<TValue> item) => _children.Add(item);
 
     /// <summary>
-    /// 清空搜索栏文本内容
+    /// <inheritdoc/>
     /// </summary>
-    public void ClearSearchText() => SearchText = null;
-
-    private async Task OnClearValue()
+    /// <returns></returns>
+    protected override async Task OnClearValue()
     {
-        if (ShowSearch)
-        {
-            ClearSearchText();
-        }
-        if (OnClearAsync != null)
-        {
-            await OnClearAsync();
-        }
+        await base.OnClearValue();
 
-        SelectedItem<TValue>? item;
         if (OnQueryAsync != null)
         {
             await VirtualizeElement.RefreshDataAsync();
-            item = _result.Items.FirstOrDefault();
         }
-        else
-        {
-            item = Items.FirstOrDefault();
-        }
-        if (item != null)
-        {
-            await SelectedItemChanged(item);
-        }
+        SelectedItem = new SelectedItem<TValue>(default!, "");
     }
 
     private string? ReadonlyString => IsEditable ? null : "readonly";
@@ -563,17 +487,22 @@ public partial class SelectGeneric<TValue> : ISelectGeneric<TValue>, IModelEqual
 
             if (item == null)
             {
-                TValue val = default!;
+                TValue? val = default;
                 if (TextConvertToValueCallback != null)
                 {
                     val = await TextConvertToValueCallback(v);
                 }
-                item = new SelectedItem<TValue>(val, v);
 
-                var items = new List<SelectedItem<TValue>>() { item };
-                items.AddRange(Items);
-                Items = items;
-                CurrentValue = val;
+                if (val is not null)
+                {
+                    // 返回值时，由外部更新 Items 参数
+                    CurrentValue = val;
+                }
+                else
+                {
+                    // 返回空值时恢复上次选中值
+                    await InvokeVoidAsync("resetValue", InputId, SelectedRow?.Text);
+                }
             }
             else
             {

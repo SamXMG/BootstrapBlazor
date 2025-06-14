@@ -560,9 +560,12 @@ public class TableTest : BootstrapBlazorTestBase
                     builder.AddAttribute(2, "FieldExpression", Utility.GenerateValueExpression(foo, "Name", typeof(string)));
                     builder.CloseComponent();
                 });
+                pb.Add(a => a.ToolbarTemplate, builder => builder.AddContent(0, "table-toolbar-template-content"));
             });
         });
         cut.Contains("float-end table-toolbar-button");
+        cut.Contains("float-start table-toolbar-template");
+        cut.Contains("table-toolbar-template-content");
     }
 
     [Fact]
@@ -577,6 +580,7 @@ public class TableTest : BootstrapBlazorTestBase
             {
                 pb.Add(a => a.RenderMode, TableRenderMode.Table);
                 pb.Add(a => a.IsExcel, true);
+                pb.Add(a => a.EnableKeyboardNavigationCell, true);
                 pb.Add(a => a.Items, items);
                 pb.Add(a => a.OnSaveAsync, (foo, changedItem) =>
                 {
@@ -976,6 +980,7 @@ public class TableTest : BootstrapBlazorTestBase
                 pb.Add(a => a.RenderMode, TableRenderMode.Table);
                 pb.Add(a => a.PageItemsSource, [2, 4, 8]);
                 pb.Add(a => a.IsPagination, true);
+                pb.Add(a => a.IsAutoScrollTopWhenClickPage, true);
                 pb.Add(a => a.OnQueryAsync, OnQueryAsync(localizer));
                 pb.Add(a => a.TableColumns, foo => builder =>
                 {
@@ -987,8 +992,9 @@ public class TableTest : BootstrapBlazorTestBase
             });
         });
 
-        var pager = cut.FindComponent<Pagination>();
-        await cut.InvokeAsync(() => pager.Instance.OnPageLinkClick!.Invoke(2));
+        var items = cut.FindAll(".page-link");
+        await cut.InvokeAsync(() => items[2].Click());
+
         var activePage = cut.Find(".page-item.active");
         Assert.Equal("2", activePage.TextContent);
     }
@@ -1054,7 +1060,7 @@ public class TableTest : BootstrapBlazorTestBase
             return Task.FromResult(new QueryData<Foo>()
             {
                 Items = items,
-                TotalCount = items.Count(),
+                TotalCount = 80,
                 IsAdvanceSearch = true,
                 IsFiltered = true,
                 IsSearch = true,
@@ -2104,6 +2110,7 @@ public class TableTest : BootstrapBlazorTestBase
                 pb.Add(a => a.RenderMode, TableRenderMode.Table);
                 pb.Add(a => a.ScrollMode, ScrollMode.Virtual);
                 pb.Add(a => a.RowHeight, 39.5f);
+                pb.Add(a => a.OverscanCount, 10);
                 pb.Add(a => a.ShowFooter, true);
                 pb.Add(a => a.IsFixedFooter, true);
                 pb.Add(a => a.Items, Foo.GenerateFoo(localizer));
@@ -2359,6 +2366,7 @@ public class TableTest : BootstrapBlazorTestBase
     {
         var clicked = false;
         var clickCallback = false;
+        var confirmCallback = false;
         var localizer = Context.Services.GetRequiredService<IStringLocalizer<Foo>>();
         var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
         {
@@ -2389,15 +2397,21 @@ public class TableTest : BootstrapBlazorTestBase
                         clickCallback = true;
                         return Task.CompletedTask;
                     }));
+                    builder.AddAttribute(4, nameof(TableToolbarPopConfirmButton<Foo>.OnConfirm), new Func<Task>(() =>
+                    {
+                        confirmCallback = true;
+                        return Task.CompletedTask;
+                    }));
                     builder.CloseComponent();
                 });
             });
         });
 
         var button = cut.FindComponent<PopConfirmButton>();
-        await cut.InvokeAsync(() => button.Instance.OnConfirm.Invoke());
+        await cut.InvokeAsync(() => button.Instance.OnConfirm!.Invoke());
         Assert.True(clickCallback);
         Assert.True(clicked);
+        Assert.True(confirmCallback);
     }
 
     [Fact]
@@ -2693,6 +2707,7 @@ public class TableTest : BootstrapBlazorTestBase
         var localizer = Context.Services.GetRequiredService<IStringLocalizer<Foo>>();
         var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
         {
+            pb.Add(a => a.EnableErrorLogger, false);
             pb.AddChildContent<Table<Foo>>(pb =>
             {
                 pb.Add(a => a.RenderMode, TableRenderMode.Table);
@@ -2710,6 +2725,13 @@ public class TableTest : BootstrapBlazorTestBase
         });
         var virtualComponent = cut.FindComponent<Virtualize<Foo>>();
         Assert.NotNull(virtualComponent);
+
+        var table = cut.FindComponent<Table<Foo>>();
+        var exception = Assert.Throws<InvalidOperationException>(() => table.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.IsTree, true);
+        }));
+        Assert.NotNull(exception);
     }
 
     [Fact]
@@ -4562,6 +4584,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => nextBtn.Click());
 
         //选中行数为空
+        inputs = cut.FindComponents<Checkbox<Foo>>();
         checkboxs = inputs.Count(i => i.Instance.State == CheckboxState.Checked);
         Assert.Equal(0, checkboxs);
 
@@ -4573,6 +4596,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(input.Instance.OnToggleClick);
 
         //加上表头的复选框选中，结果有3项
+        inputs = cut.FindComponents<Checkbox<Foo>>();
         checkboxs = inputs.Count(i => i.Instance.State == CheckboxState.Checked);
         Assert.Equal(3, checkboxs);
 
@@ -4581,6 +4605,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => prevBtn.Click());
 
         //恢复选中行数为0
+        inputs = cut.FindComponents<Checkbox<Foo>>();
         checkboxs = inputs.Count(i => i.Instance.State == CheckboxState.Checked);
         Assert.Equal(0, checkboxs);
 
@@ -4588,6 +4613,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => prevBtn.Click());
 
         //恢复选中行数为1
+        inputs = cut.FindComponents<Checkbox<Foo>>();
         checkboxs = inputs.Count(i => i.Instance.State == CheckboxState.Checked);
         Assert.Equal(1, checkboxs);
 
@@ -4595,6 +4621,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => nextBtn.Click());
 
         //恢复选中行数为0
+        inputs = cut.FindComponents<Checkbox<Foo>>();
         checkboxs = inputs.Count(i => i.Instance.State == CheckboxState.Checked);
         Assert.Equal(0, checkboxs);
 
@@ -4602,6 +4629,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => nextBtn.Click());
 
         //恢复选中行数为2，加上表头的复选框选中，结果有3项
+        inputs = cut.FindComponents<Checkbox<Foo>>();
         checkboxs = inputs.Count(i => i.Instance.State == CheckboxState.Checked);
         Assert.Equal(3, checkboxs);
     }
@@ -5010,6 +5038,7 @@ public class TableTest : BootstrapBlazorTestBase
                     builder.AddAttribute(31, "IsVisibleWhenAdd", false);
                     builder.AddAttribute(32, "IsVisibleWhenEdit", false);
                     builder.AddAttribute(33, "LookupService", new FooLookupService());
+                    builder.AddAttribute(34, "Cols", 6);
                     builder.CloseComponent();
                 });
             });
@@ -5031,6 +5060,7 @@ public class TableTest : BootstrapBlazorTestBase
         Assert.NotNull(column.Instance.Step);
         Assert.NotNull(column.Instance.Template);
         Assert.Equal(1, column.Instance.Rows);
+        Assert.Equal(6, column.Instance.Cols);
         Assert.NotNull(column.Instance.EditTemplate);
         Assert.NotNull(column.Instance.SearchTemplate);
         Assert.NotNull(column.Instance.FilterTemplate);
@@ -5359,7 +5389,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(input.Instance.OnToggleClick);
 
         var button = cut.FindComponent<TableToolbarPopConfirmButton<Foo>>();
-        await cut.InvokeAsync(() => button.Instance.OnConfirm.Invoke());
+        await cut.InvokeAsync(() => button.Instance.OnConfirm!.Invoke());
         Assert.Single(items);
     }
 
@@ -5409,7 +5439,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(input.Instance.OnToggleClick);
 
         var button = cut.FindComponent<TableToolbarPopConfirmButton<Foo>>();
-        await cut.InvokeAsync(() => button.Instance.OnConfirm.Invoke());
+        await cut.InvokeAsync(() => button.Instance.OnConfirm!.Invoke());
 
         var row = cut.FindAll("tbody tr");
         Assert.Single(row);
@@ -6188,7 +6218,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => table.Instance.AddAsync());
 
         var delete = cut.FindComponent<TableToolbarPopConfirmButton<DynamicObject>>();
-        await cut.InvokeAsync(() => delete.Instance.OnConfirm());
+        await cut.InvokeAsync(() => delete.Instance.OnConfirm!.Invoke());
     }
 
     [Fact]
@@ -6942,13 +6972,13 @@ public class TableTest : BootstrapBlazorTestBase
         // 选一个
         var input = cut.FindComponents<Checkbox<Foo>>()[1];
         cut.InvokeAsync(input.Instance.OnToggleClick);
-        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm());
+        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm!.Invoke());
 
         table.SetParametersAndRender(pb =>
         {
             pb.Add(a => a.PageItemsSource, [1, 2, 4, 8]);
         });
-        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm());
+        cut.InvokeAsync(() => deleteButton.Instance.OnConfirm!.Invoke());
     }
 
     [Fact]
@@ -6971,6 +7001,12 @@ public class TableTest : BootstrapBlazorTestBase
                     builder.AddAttribute(1, "Field", "Name");
                     builder.AddAttribute(2, "FieldExpression", Utility.GenerateValueExpression(foo, "Name", typeof(string)));
                     builder.CloseComponent();
+
+                    builder.OpenComponent<TableColumn<Foo, string>>(0);
+                    builder.AddAttribute(1, "Field", "Address");
+                    builder.AddAttribute(2, "FieldExpression", Utility.GenerateValueExpression(foo, "Address", typeof(string)));
+                    builder.AddAttribute(3, "IgnoreWhenExport", true);
+                    builder.CloseComponent();
                 });
             });
         });
@@ -6985,9 +7021,20 @@ public class TableTest : BootstrapBlazorTestBase
         }
 
         var table = cut.FindComponent<Table<Foo>>();
+
+        // 可见列为 2 列
+        var columns = table.Instance.GetVisibleColumns();
+        Assert.Equal(2, columns.Count());
+
+        // 由于设置了 IgnoreWhenExport 为 true 所以导出时不包含 Address 列
+        ITableExportDataContext<Foo>? exportContext = null;
         table.SetParametersAndRender(pb =>
         {
-            pb.Add(a => a.OnExportAsync, _ => Task.FromResult(true));
+            pb.Add(a => a.OnExportAsync, context =>
+            {
+                exportContext ??= context;
+                return Task.FromResult(true);
+            });
         });
 
         buttons = cut.FindAll(".dropdown-menu-end .dropdown-item");
@@ -6998,6 +7045,9 @@ public class TableTest : BootstrapBlazorTestBase
                 button.Click();
             });
         }
+        Assert.NotNull(exportContext);
+        Assert.Single(exportContext.Columns);
+        Assert.Equal("Name", exportContext.Columns.ElementAt(0).GetFieldName());
     }
 
     [Fact]
@@ -7073,7 +7123,7 @@ public class TableTest : BootstrapBlazorTestBase
         await cut.InvokeAsync(() => table.Instance.AddAsync());
 
         var delete = cut.FindComponent<TableToolbarPopConfirmButton<Foo>>();
-        await cut.InvokeAsync(() => delete.Instance.OnConfirm());
+        await cut.InvokeAsync(() => delete.Instance.OnConfirm!.Invoke());
     }
 
     [Fact]
@@ -8614,6 +8664,86 @@ public class TableTest : BootstrapBlazorTestBase
         });
     }
 
+    [Fact]
+    public void Modify_Ok()
+    {
+        var cut = Context.RenderComponent<Table<Foo>>(pb =>
+        {
+            pb.Add(a => a.TableColumns, foo => builder =>
+            {
+                builder.OpenComponent<TableColumn<Foo, string>>(0);
+                builder.AddAttribute(1, "Field", "Name");
+                builder.AddAttribute(2, "FieldExpression", Utility.GenerateValueExpression(foo, "Name", typeof(string)));
+                builder.CloseComponent();
+            });
+            pb.Add(a => a.ShowExtendEditButton, false);
+            pb.Add(a => a.ShowExtendDeleteButton, false);
+        });
+
+        // 不显示编辑删除按钮不参与是否可编辑删除判断，用户可能自定义按钮编辑或者删除当前行
+        Assert.False(ProhibitEdit(cut.Instance));
+        Assert.False(ProhibitDelete(cut.Instance));
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowExtendEditButton, true);
+            pb.Add(a => a.ShowExtendDeleteButton, true);
+            pb.Add(a => a.DisableExtendEditButton, true);
+            pb.Add(a => a.DisableExtendDeleteButton, true);
+        });
+        Assert.True(ProhibitEdit(cut.Instance));
+        Assert.True(ProhibitDelete(cut.Instance));
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowExtendEditButton, true);
+            pb.Add(a => a.ShowExtendDeleteButton, true);
+            pb.Add(a => a.DisableExtendEditButton, false);
+            pb.Add(a => a.DisableExtendDeleteButton, false);
+            pb.Add(a => a.SelectedRows, [new Foo()]);
+            pb.Add(a => a.DisableExtendEditButtonCallback, rows =>
+            {
+                return true;
+            });
+            pb.Add(a => a.DisableExtendDeleteButtonCallback, rows =>
+            {
+                return true;
+            });
+        });
+        Assert.True(ProhibitEdit(cut.Instance));
+        Assert.True(ProhibitDelete(cut.Instance));
+    }
+
+    static bool ProhibitEdit(Table<Foo> @this)
+    {
+        var ret = false;
+        var methodInfo = @this.GetType().GetMethod("ProhibitEdit", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (methodInfo != null)
+        {
+            var result = methodInfo.Invoke(@this, null);
+            if (result is bool d)
+            {
+                ret = d;
+            }
+        }
+        return ret;
+    }
+
+    static bool ProhibitDelete(Table<Foo> @this)
+    {
+        var ret = false;
+        var methodInfo = @this.GetType().GetMethod("ProhibitDelete", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (methodInfo != null)
+        {
+            var result = methodInfo.Invoke(@this, null);
+            if (result is bool d)
+            {
+                ret = d;
+            }
+        }
+        return ret;
+    }
+
     class MockFoo(string name)
     {
         public string Name { get; set; } = name;
@@ -8911,9 +9041,10 @@ public class TableTest : BootstrapBlazorTestBase
 
         public RenderFragment RenderVirtualPlaceHolder() => new(builder =>
         {
-            if (ScrollMode == ScrollMode.Virtual && VirtualizeElement != null)
+            var fieldInfo = GetType().BaseType!.GetField("_virtualizeElement", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            if (ScrollMode == ScrollMode.Virtual && fieldInfo.GetValue(this) is Virtualize<Foo> element)
             {
-                builder.AddContent(0, VirtualizeElement.Placeholder?.Invoke(new Microsoft.AspNetCore.Components.Web.Virtualization.PlaceholderContext()));
+                builder.AddContent(0, element.Placeholder?.Invoke(new PlaceholderContext()));
             }
         });
 

@@ -5,6 +5,7 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using System.Globalization;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,15 @@ public static class BootstrapBlazorServiceCollectionExtensions
         services.TryAddSingleton<IVersionService, DefaultJSVersionService>();
         services.TryAddSingleton<IZipArchiveService, DefaultZipArchiveService>();
         services.TryAddSingleton(typeof(IDispatchService<>), typeof(DefaultDispatchService<>));
+
+        // 增加 IHostEnvironment 服务
+        services.TryAddSingleton<IHostEnvironment, MockWasmHostEnvironment>();
+
+        // 增加 OtpOptions 配置支持
+        services.AddOptionsMonitor<OtpOptions>();
+
+        // 增加 ITotpService
+        services.TryAddSingleton<ITotpService, DefaultTotpService>();
 
         // BootstrapBlazorRootRegisterService 服务
         services.AddScoped<BootstrapBlazorRootRegisterService>();
@@ -80,6 +90,9 @@ public static class BootstrapBlazorServiceCollectionExtensions
         services.TryAddScoped<IBrowserFingerService, DefaultBrowserFingerService>();
         services.TryAddScoped<ISerialService, DefaultSerialService>();
         services.TryAddScoped<IBluetooth, DefaultBluetooth>();
+        services.TryAddScoped<IMediaDevices, DefaultMediaDevices>();
+        services.TryAddScoped<IVideoDevice, DefaultVideoDevice>();
+        services.TryAddScoped<IAudioDevice, DefaultAudioDevice>();
         services.AddScoped<TabItemTextOptions>();
         services.AddScoped<DialogService>();
         services.AddScoped<MaskService>();

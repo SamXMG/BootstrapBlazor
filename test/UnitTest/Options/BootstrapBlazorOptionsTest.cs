@@ -13,6 +13,7 @@ public class BootstrapBlazorOptionsTest
         var options = new BootstrapBlazorOptions()
         {
             EnableErrorLogger = true,
+            ShowErrorLoggerToast = true,
             EnableFallbackCulture = true,
             JSModuleVersion = "1.0",
             TableSettings = new()
@@ -95,11 +96,15 @@ public class BootstrapBlazorOptionsTest
         exportOptions.AutoMergeArray = false;
         exportOptions.ArrayDelimiter = ",";
         exportOptions.UseEnumDescription = false;
+        exportOptions.EnableAutoFilter = false;
+        exportOptions.EnableAutoWidth = false;
 
         Assert.False(exportOptions.EnableLookup);
         Assert.False(exportOptions.EnableFormat);
         Assert.False(exportOptions.AutoMergeArray);
         Assert.False(exportOptions.UseEnumDescription);
+        Assert.False(exportOptions.EnableAutoFilter);
+        Assert.False(exportOptions.EnableAutoWidth);
 
         Assert.Equal(",", exportOptions.ArrayDelimiter);
     }

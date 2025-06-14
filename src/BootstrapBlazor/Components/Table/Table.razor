@@ -1,4 +1,5 @@
 ﻿@namespace BootstrapBlazor.Components
+@using Microsoft.AspNetCore.Components.Web.Virtualization
 @typeparam TItem
 @inherits BootstrapModuleComponentBase
 @attribute [BootstrapModuleAutoLoader(JSObjectReference = true)]
@@ -68,6 +69,12 @@
                         @TableToolbarTemplate
                     }
                 </TableToolbar>
+                @if (ToolbarTemplate != null)
+                {
+                    <div class="float-start table-toolbar-template">
+                        @ToolbarTemplate
+                    </div>
+                }
                 <div class="float-end table-toolbar-button btn-group table-column-right">
                     @if (TableExtensionToolbarBeforeTemplate != null)
                     {
@@ -230,7 +237,7 @@
                         }
                         else
                         {
-                            <DynamicElement class="@GetRowClassString(item, "table-row")"
+                            <DynamicElement class="@GetRowClassString(item, "table-row")" @key="item"
                                             TriggerContextMenu="ContextMenuZone != null" OnContextMenu="e => OnContextMenu(e, item)"
                                             @ontouchstart="e => OnTouchStart(e, item)"
                                             @ontouchend="OnTouchEnd"
@@ -368,18 +375,15 @@
             {
                 @if (Items != null)
                 {
-                    <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize @ref="VirtualizeElement"
-                        ItemSize="RowHeight" OverscanCount="10" Items="@Items.ToList()" ChildContent="RenderRow" />
+                    <Virtualize ItemSize="RowHeight" OverscanCount="@OverscanCount" Items="@Items.ToList()" ChildContent="RenderRow">
+                    </Virtualize>
                 }
                 else
                 {
-                    <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize @ref="VirtualizeElement"
-                        ItemSize="RowHeight" OverscanCount="10"
-                        ItemsProvider="LoadItems" ItemContent="RenderRow">
-                        <Placeholder>
-                            @RenderPlaceHolderRow
-                        </Placeholder>
-                    </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+                    <Virtualize @ref="_virtualizeElement"
+                                ItemSize="RowHeight" OverscanCount="@OverscanCount" Placeholder="RenderPlaceholderRow"
+                                ItemsProvider="LoadItems" ItemContent="RenderRow">
+                    </Virtualize>
                 }
             }
             else
@@ -582,7 +586,7 @@
                             }
                             @if (col.GetFilterable() && !ShowFilterHeader)
                             {
-                                <TableFilter Icon="@FilterIcon" Column="col" Table="this" IsActive="@Filters.ContainsKey(fieldName)" @onclick:stopPropagation />
+                                <TableColumnFilter Icon="@FilterIcon" Column="col" Table="this" IsActive="@Filters.ContainsKey(fieldName)" @onclick:stopPropagation></TableColumnFilter>
                             }
                             @if (col.GetSortable())
                             {
@@ -651,7 +655,7 @@
                         <div class="table-cell">
                             @if(col.GetFilterable())
                             {
-                                <TableFilter Icon="@FilterIcon" Column="col" Table="this" IsHeaderRow="true" />
+                                <TableColumnFilter Icon="@FilterIcon" Column="col" Table="this" IsHeaderRow="true"></TableColumnFilter>
                             }
                         </div>
                     </th>
@@ -671,7 +675,7 @@
     </thead>;
 
     RenderFragment<TItem> RenderRow => item =>
-    @<DynamicElement TagName="tr" class="@GetRowClassString(item)"
+    @<DynamicElement TagName="tr" class="@GetRowClassString(item)" @key="item"
                      TriggerContextMenu="ContextMenuZone != null" OnContextMenu="e => OnContextMenu(e, item)"
                      @ontouchstart="e => OnTouchStart(e, item)" @ontouchend="OnTouchEnd"
                      TriggerClick="@(ClickToSelect || OnClickRowCallback != null)" OnClick="() => ClickRow(item)"
@@ -808,7 +812,7 @@
         }
     </DynamicElement>;
 
-    RenderFragment RenderPlaceHolderRow =>
+    RenderFragment<PlaceholderContext> RenderPlaceholderRow => context =>
     @<tr>
         @if (IsMultipleSelect)
         {

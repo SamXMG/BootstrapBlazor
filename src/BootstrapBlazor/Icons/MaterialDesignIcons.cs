@@ -1,6 +1,7 @@
-﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-// Website: https://www.blazor.zone or https://argozhang.github.io/
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License
+// See the LICENSE file in the project root for more information.
+// Maintainer: Argo Zhang(argo@live.ca) Website: https://www.blazor.zone
 
 namespace BootstrapBlazor.Components;
 
@@ -8,10 +9,7 @@ internal static class MaterialDesignIcons
 {
     public static Dictionary<ComponentIcons, string> Icons => new()
     {
-        // AnchorLink 组件
         { ComponentIcons.AnchorLinkIcon, "mdi mdi-link-variant" },
-
-        // Avatar 组件
         { ComponentIcons.AvatarIcon, "mdi mdi-account" },
         { ComponentIcons.AutoFillIcon, "mdi mdi-chevron-up" },
         { ComponentIcons.AutoCompleteIcon, "mdi mdi-chevron-up" },
@@ -23,6 +21,7 @@ internal static class MaterialDesignIcons
         { ComponentIcons.CameraPlayIcon, "mdi mdi-play-circle-outline" },
         { ComponentIcons.CameraStopIcon, "mdi mdi-stop-circle-outline" },
         { ComponentIcons.CameraPhotoIcon, "mdi mdi-camera-outline" },
+
         { ComponentIcons.CardCollapseIcon, "mdi mdi-chevron-right-circle" },
         { ComponentIcons.CarouselPreviousIcon, "mdi mdi-chevron-left" },
         { ComponentIcons.CarouselNextIcon, "mdi mdi-chevron-right" },
@@ -30,16 +29,15 @@ internal static class MaterialDesignIcons
         { ComponentIcons.CascaderSubMenuIcon, "mdi mdi-chevron-down" },
         { ComponentIcons.ConsoleClearButtonIcon, "mdi mdi-close" },
 
-        // DateTimePicker 组件
         { ComponentIcons.DatePickBodyPreviousYearIcon, "mdi mdi-chevron-double-left" },
         { ComponentIcons.DatePickBodyPreviousMonthIcon, "mdi mdi-chevron-left" },
         { ComponentIcons.DatePickBodyNextMonthIcon, "mdi mdi-chevron-right" },
         { ComponentIcons.DatePickBodyNextYearIcon, "mdi mdi-chevron-double-right" },
         { ComponentIcons.DateTimePickerIcon, "mdi mdi-calendar-outline" },
+
         { ComponentIcons.TimePickerCellUpIcon, "mdi mdi-chevron-up" },
         { ComponentIcons.TimePickerCellDownIcon, "mdi mdi-chevron-down" },
 
-        // DateTimeRange 组件
         { ComponentIcons.DateTimeRangeIcon, "mdi mdi-calendar-range-outline" },
         { ComponentIcons.DateTimeRangeClearIcon, "mdi mdi-close-circle-outline" },
 
@@ -77,8 +75,8 @@ internal static class MaterialDesignIcons
         { ComponentIcons.ImagePreviewNextIcon, "mdi mdi-chevron-right" },
         { ComponentIcons.ImagePreviewMinusIcon, "mdi mdi-magnify-minus-outline" },
         { ComponentIcons.ImagePreviewPlusIcon, "mdi mdi-magnify-plus-outline" },
-        { ComponentIcons.ImagePreviewRotateLeftIcon, "mdi mdi-file-rotate-left-outline" },
-        { ComponentIcons.ImagePreviewRotateRightIcon, "mdi mdi-file-rotate-right-outline" },
+        { ComponentIcons.ImagePreviewRotateLeftIcon, "mdi mdi-restore" },
+        { ComponentIcons.ImagePreviewRotateRightIcon, "mdi mdi-reload" },
 
         { ComponentIcons.ImageViewerFileIcon, "mdi mdi-file-image-outline" },
 
@@ -88,6 +86,12 @@ internal static class MaterialDesignIcons
         { ComponentIcons.InputNumberPlusIcon, "mdi mdi-plus-circle-outline" },
 
         { ComponentIcons.LayoutMenuBarIcon, "mdi mdi-menu" },
+        { ComponentIcons.TabContextMenuRefreshIcon, "mdi mdi-refresh" },
+        { ComponentIcons.TabContextMenuCloseIcon, "mdi mdi-close" },
+        { ComponentIcons.TabContextMenuCloseOtherIcon, "mdi mdi-menu" },
+        { ComponentIcons.TabContextMenuCloseAllIcon, "mdi mdi-arrow-left-right-bold" },
+        { ComponentIcons.TabContextMenuFullScreenIcon, "mdi mdi-arrow-expand-all" },
+
         { ComponentIcons.LogoutLinkIcon, "mdi mdi-logout" },
 
         { ComponentIcons.LoadingIcon, "mdi mdi-loading mdi-spin" },
@@ -109,7 +113,8 @@ internal static class MaterialDesignIcons
         { ComponentIcons.RibbonTabArrowPinIcon, "mdi mdi-pin mdi-pin-off" },
 
         { ComponentIcons.MultiSelectDropdownIcon, "mdi mdi-chevron-up" },
-        { ComponentIcons.MultiSelectClearIcon, "mdi mdi-close" },
+        { ComponentIcons.MultiSelectCloseIcon, "mdi mdi-close" },
+        { ComponentIcons.MultiSelectClearIcon, "mdi mdi-close-circle-outline" },
 
         { ComponentIcons.SelectTreeDropdownIcon, "mdi mdi-chevron-up" },
 
@@ -135,6 +140,7 @@ internal static class MaterialDesignIcons
         { ComponentIcons.TabNextIcon, "mdi mdi-chevron-right" },
         { ComponentIcons.TabDropdownIcon, "mdi mdi-chevron-down" },
         { ComponentIcons.TabCloseIcon, "mdi mdi-close" },
+        { ComponentIcons.TabRefreshButtonIcon, "mdi mdi-reload" },
 
         { ComponentIcons.TableColumnToolboxIcon, "mdi mdi-cog" },
 
@@ -178,6 +184,7 @@ internal static class MaterialDesignIcons
         { ComponentIcons.TreeViewSearchIcon, "mdi mdi-magnify" },
         { ComponentIcons.TreeViewResetSearchIcon, "mdi mdi-backspace" },
         { ComponentIcons.TreeViewLoadingIcon, "mdi mdi-loading mdi-spin" },
+        { ComponentIcons.TreeViewToolbarEditButton, "mdi mdi-file-edit-outline" },
 
         // Upload
         { ComponentIcons.AvatarUploadDeleteIcon, "mdi mdi-trash-can-outline" },
@@ -187,23 +194,21 @@ internal static class MaterialDesignIcons
         { ComponentIcons.AvatarUploadInvalidStatusIcon, "mdi mdi-close mdi-rotate-315" },
 
         { ComponentIcons.ButtonUploadBrowserButtonIcon, "mdi mdi-folder-open" },
-        { ComponentIcons.ButtonUploadLoadingIcon, "mdi mdi-loading mdi-spin" },
-        { ComponentIcons.ButtonUploadInvalidStatusIcon, "mdi mdi-close-circle-outline" },
-        { ComponentIcons.ButtonUploadValidStatusIcon, "mdi mdi-check-circle-outline" },
-        { ComponentIcons.ButtonUploadDeleteIcon, "mdi mdi-trash-can-outline" },
-        { ComponentIcons.ButtonUploadDownloadIcon, "mdi mdi-cloud-download-outline" },
 
         { ComponentIcons.InputUploadBrowserButtonIcon, "mdi mdi-folder-open" },
         { ComponentIcons.InputUploadDeleteButtonIcon, "mdi mdi-trash-can-outline" },
 
         { ComponentIcons.CardUploadAddIcon, "mdi mdi-plus" },
         { ComponentIcons.CardUploadStatusIcon, "mdi mdi-check mdi-rotate-315" },
-        { ComponentIcons.CardUploadDeleteIcon, "mdi mdi-close mdi-rotate-315" },
         { ComponentIcons.CardUploadRemoveIcon, "mdi mdi-trash-can-outline" },
-        { ComponentIcons.CardUploadDownloadIcon, "mdi mdi-cloud-download-outline" },
         { ComponentIcons.CardUploadZoomIcon, "mdi mdi-magnify-plus-outline" },
         { ComponentIcons.UploadCancelIcon, "mdi mdi-cancel" },
         { ComponentIcons.DropUploadIcon, "mdi mdi-cloud-upload" },
+        { ComponentIcons.UploadLoadingIcon, "mdi mdi-loading mdi-spin" },
+        { ComponentIcons.UploadInvalidStatusIcon, "mdi mdi-close-circle-outline" },
+        { ComponentIcons.UploadValidStatusIcon, "mdi mdi-check-circle-outline" },
+        { ComponentIcons.UploadDeleteIcon, "mdi mdi-close mdi-rotate-315" },
+        { ComponentIcons.UploadDownloadIcon, "mdi mdi-cloud-download-outline" },
 
         { ComponentIcons.FileIconExcel, "mdi mdi-file-excel-outline" },
         { ComponentIcons.FileIconDocx, "mdi mdi-file-word-outline" },

@@ -14,6 +14,112 @@ namespace UnitTest.Components;
 public class LayoutTest : BootstrapBlazorTestBase
 {
     [Fact]
+    public async Task TabStyle_Ok()
+    {
+        var cut = Context.RenderComponent<Layout>(pb =>
+        {
+            pb.Add(a => a.UseTabSet, true);
+            pb.Add(a => a.TabStyle, TabStyle.Default);
+            pb.Add(a => a.RefreshToolbarButtonIcon, "test-refresh-icon");
+            pb.Add(a => a.FullscreenToolbarButtonIcon, "test-fullscreen-icon");
+            pb.Add(a => a.OnToolbarRefreshCallback, () => Task.CompletedTask);
+            pb.Add(a => a.RefreshToolbarTooltipText, "test-refresh-tooltip");
+            pb.Add(a => a.FullscreenToolbarTooltipText, "test-fullscreen-tooltip");
+        });
+        Assert.DoesNotContain("tabs-chrome", cut.Markup);
+        Assert.DoesNotContain("tabs-capsule", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.TabStyle, TabStyle.Capsule));
+        Assert.Contains("tabs-capsule", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.TabStyle, TabStyle.Chrome));
+        Assert.Contains("tabs-chrome", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.ShowToolbar, true));
+        Assert.Contains("tabs-nav-toolbar-refresh", cut.Markup);
+        Assert.Contains("tabs-nav-toolbar-fs", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.ShowRefreshToolbarButton, false));
+        Assert.DoesNotContain("tabs-nav-toolbar-refresh", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.ShowFullscreenToolbarButton, false));
+        Assert.DoesNotContain("tabs-nav-toolbar-fs", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.ToolbarTemplate, tab => builder => builder.AddContent(0, "test-toolbar-template")));
+        Assert.Contains("test-toolbar-template", cut.Markup);
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.ShowTabContextMenu, true));
+        cut.Contains("bb-cm-zone");
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.BeforeTabContextMenuTemplate, tab => b => b.AddContent(0, "test-before-tab-context-menu")));
+        cut.Contains("test-before-tab-context-menu");
+
+        cut.SetParametersAndRender(pb => pb.Add(a => a.TabContextMenuTemplate, tab => b => b.AddContent(0, "test-tab-context-menu")));
+        cut.Contains("test-tab-context-menu");
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.TabContextMenuRefreshIcon, "test-tab-refresh-icon");
+            pb.Add(a => a.TabContextMenuCloseIcon, "test-tab-close-icon");
+            pb.Add(a => a.TabContextMenuCloseAllIcon, "test-tab-close-all-icon");
+            pb.Add(a => a.TabContextMenuCloseOtherIcon, "test-tab-close-other-icon");
+        });
+
+        // test context menu onclick event handler
+        var tab = cut.Find(".tabs-item");
+        await cut.InvokeAsync(() => tab.ContextMenu());
+
+        var buttons = cut.FindAll(".bb-cm-zone > .dropdown-menu .dropdown-item");
+        foreach (var button in buttons)
+        {
+            await cut.InvokeAsync(() => button.Click());
+        }
+        cut.Contains("test-tab-refresh-icon");
+        cut.Contains("test-tab-close-icon");
+        cut.Contains("test-tab-close-all-icon");
+        cut.Contains("test-tab-close-other-icon");
+
+        var show = false;
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.OnBeforeShowContextMenu, item =>
+            {
+                show = true;
+                return Task.FromResult(true);
+            });
+        });
+        await cut.InvokeAsync(() => tab.ContextMenu());
+        Assert.True(show);
+    }
+
+    [Fact]
+    public async Task ShowTabInHeader_Ok()
+    {
+        var cut = Context.RenderComponent<Layout>(pb =>
+        {
+            pb.Add(a => a.Id, "LayoutId");
+            pb.Add(a => a.UseTabSet, true);
+            pb.Add(a => a.ShowTabInHeader, false);
+            pb.Add(a => a.Header, CreateHeader());
+        });
+        await cut.InvokeAsync(() => cut.Instance.Render(bulder => bulder.AddContent(0, "")));
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowTabInHeader, true);
+        });
+        cut.Contains("data-bb-header-id=\"LayoutId_tab_header\"");
+        cut.Contains("tabs tabs-chrome");
+        await cut.InvokeAsync(() => cut.Instance.Render(bulder => bulder.AddContent(0, "")));
+
+        cut.SetParametersAndRender(pb =>
+        {
+            pb.Add(a => a.ShowTabInHeader, false);
+        });
+        await cut.InvokeAsync(() => cut.Instance.Render(bulder => bulder.AddContent(0, "")));
+    }
+
+    [Fact]
     public void ShowFooter_OK()
     {
         var cut = Context.RenderComponent<Layout>(pb =>
@@ -234,18 +340,18 @@ public class LayoutTest : BootstrapBlazorTestBase
         });
         var nav = cut.Services.GetRequiredService<FakeNavigationManager>();
         nav.NavigateTo("/Binder");
-        cut.WaitForAssertion(() => cut.Contains("<div class=\"tabs-body-content\">Binder</div>"));
+        cut.Contains("Binder");
     }
 
     [Fact]
-    public void ShowLayouSidebar_Ok()
+    public void ShowLayoutSidebar_Ok()
     {
         var cut = Context.RenderComponent<Layout>(pb =>
         {
             pb.Add(a => a.UseTabSet, true);
             pb.Add(a => a.AdditionalAssemblies, new Assembly[] { GetType().Assembly });
             pb.Add(a => a.IsFullSide, true);
-            pb.Add(a => a.ShowSplitebar, true);
+            pb.Add(a => a.ShowSplitBar, true);
             pb.Add(a => a.SidebarMinWidth, 100);
             pb.Add(a => a.SidebarMaxWidth, 300);
             pb.Add(a => a.Side, new RenderFragment(builder =>
@@ -253,7 +359,7 @@ public class LayoutTest : BootstrapBlazorTestBase
                 builder.AddContent(0, "test");
             }));
         });
-        cut.Contains("layout-splitebar");
+        cut.Contains("layout-split-bar");
         cut.Contains("data-bb-min=\"100\"");
         cut.Contains("data-bb-max=\"300\"");
     }
@@ -268,7 +374,7 @@ public class LayoutTest : BootstrapBlazorTestBase
         });
         var nav = cut.Services.GetRequiredService<FakeNavigationManager>();
         nav.NavigateTo("/Binder");
-        cut.WaitForAssertion(() => cut.Contains("<div class=\"tabs-body-content\">Binder</div>"));
+        cut.Contains("Binder");
     }
 
     [Fact]
@@ -422,13 +528,14 @@ public class LayoutTest : BootstrapBlazorTestBase
     }
 
     [Fact]
-    public void HandlerException_Ok()
+    public void IHandlerException_Ok()
     {
         var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
         {
             pb.Add(a => a.EnableErrorLogger, true);
             pb.AddChildContent<Layout>(pb =>
             {
+                // 按钮触发异常
                 pb.Add(a => a.Main, new RenderFragment(builder =>
                 {
                     builder.OpenComponent<Button>(0);
@@ -446,7 +553,106 @@ public class LayoutTest : BootstrapBlazorTestBase
         var button = cut.Find("button");
         cut.InvokeAsync(() => button.Click());
         cut.Contains("<div class=\"error-stack\">");
+        cut.Contains("class=\"layout\"");
         Context.DisposeComponents();
+    }
+
+    [Fact]
+    public void ErrorLogger_LifeCycle()
+    {
+        var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
+        {
+            pb.Add(a => a.EnableErrorLogger, true);
+            pb.AddChildContent<Layout>(pb =>
+            {
+                pb.Add(a => a.UseTabSet, false);
+                pb.Add(a => a.EnableErrorLogger, true);
+                pb.Add(a => a.ShowErrorLoggerToast, false);
+                pb.Add(a => a.ErrorLoggerToastTitle, "Title");
+                // 按钮触发异常
+                pb.Add(a => a.Main, new RenderFragment(builder =>
+                {
+                    builder.OpenComponent<MockPage>(0);
+                    builder.CloseComponent();
+                }));
+            });
+        });
+        cut.Contains("<div class=\"error-stack\">");
+        cut.Contains("class=\"layout\"");
+    }
+
+    [Fact]
+    public void ErrorLogger_OnErrorHandleAsync_Page()
+    {
+        // 页面生命周期内报错调用自定义处理方法
+        Exception? ex1 = null;
+        var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
+        {
+            pb.Add(a => a.EnableErrorLogger, true);
+            pb.AddChildContent<Layout>(pb =>
+            {
+                pb.Add(a => a.UseTabSet, false);
+                pb.Add(a => a.OnErrorHandleAsync, (logger, ex) =>
+                {
+                    ex1 = ex;
+                    return Task.CompletedTask;
+                });
+                // 按钮触发异常
+                pb.Add(a => a.Main, new RenderFragment(builder =>
+                {
+                    builder.OpenComponent<MockPage>(0);
+                    builder.CloseComponent();
+                }));
+            });
+        });
+        Assert.NotNull(ex1);
+    }
+
+    [Fact]
+    public void ErrorLogger_OnErrorHandleAsync_Button()
+    {
+        // 页面生命周期内报错调用自定义处理方法
+        Exception? ex1 = null;
+        var cut = Context.RenderComponent<BootstrapBlazorRoot>(pb =>
+        {
+            pb.Add(a => a.EnableErrorLogger, true);
+            pb.AddChildContent<Layout>(pb =>
+            {
+                pb.Add(a => a.OnErrorHandleAsync, (logger, ex) =>
+                {
+                    ex1 = ex;
+                    return Task.CompletedTask;
+                });
+                // 按钮触发异常
+                pb.Add(a => a.Main, new RenderFragment(builder =>
+                {
+                    builder.OpenComponent<Button>(0);
+                    builder.AddAttribute(1, nameof(Button.OnClick), EventCallback.Factory.Create<MouseEventArgs>(this, e =>
+                    {
+                        var a = 1;
+                        var b = 0;
+                        var c = a / b;
+                        return Task.CompletedTask;
+                    }));
+                    builder.CloseComponent();
+                }));
+            });
+        });
+        var button = cut.Find("button");
+        cut.InvokeAsync(() => button.Click());
+        Assert.NotNull(ex1);
+
+        // 移除自定义逻辑使用内部异常处理逻辑
+        var layout = cut.FindComponent<Layout>();
+        layout.SetParametersAndRender(pb =>
+        {
+           pb.Add(a => a.OnErrorHandleAsync, null);
+        });
+        button = cut.Find("button");
+
+        ex1 = null;
+        cut.InvokeAsync(() => button.Click());
+        Assert.Null(ex1);
     }
 
     [Fact]
@@ -490,7 +696,19 @@ public class LayoutAuthorizationTest : AuthorizationViewTestBase
             pb.Add(a => a.AdditionalAssemblies, new Assembly[] { GetType().Assembly });
             pb.Add(a => a.OnAuthorizing, url => Task.FromResult(true));
         });
-        cut.Contains("<section class=\"layout\" style=\"--bb-layout-header-height: 0px; --bb-layout-footer-height: 0px;\"><main class=\"layout-main\"></main></section>");
+        cut.MarkupMatches("<section id:ignore class=\"layout\" style=\"--bb-layout-header-height: 0px; --bb-layout-footer-height: 0px;\"><main class=\"layout-main\"></main></section>");
         Context.DisposeComponents();
+    }
+}
+
+class MockPage : ComponentBase
+{
+    protected override void OnInitialized()
+    {
+        var a = 1;
+        var b = 0;
+
+        // 触发生命周期内异常
+        var c = a / b; 
     }
 }

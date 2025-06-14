@@ -8,6 +8,32 @@ namespace UnitTest.Components;
 public class SearchTest : BootstrapBlazorTestBase
 {
     [Fact]
+    public async Task OnBlurAsync_Ok()
+    {
+        string? val = null;
+        var items = new List<string>() { "test1", "test2" };
+        var cut = Context.RenderComponent<Search<string>>(pb =>
+        {
+            pb.Add(a => a.OnSearch, v =>
+            {
+                return Task.FromResult(items.AsEnumerable());
+            });
+            pb.Add(a => a.OnBlurAsync, v =>
+            {
+                val = v;
+                return Task.CompletedTask;
+            });
+        });
+        await cut.InvokeAsync(() => cut.Instance.TriggerFilter("t"));
+        await Task.Delay(20);
+
+        var item = cut.Find(".dropdown-item");
+        await cut.InvokeAsync(() => item.Click());
+        Assert.NotNull(val);
+        Assert.Equal("test1", val);
+    }
+
+    [Fact]
     public void Items_Ok()
     {
         var cut = Context.RenderComponent<Search<string>>();
@@ -53,10 +79,7 @@ public class SearchTest : BootstrapBlazorTestBase
             });
             pb.Add(a => a.OnGetDisplayText, foo => foo?.Name);
         });
-
-        await cut.InvokeAsync(() => cut.Instance.TriggerChange("t"));
-        await Task.Delay(20);
-
+        await cut.InvokeAsync(() => cut.Instance.TriggerFilter("t"));
         Assert.Contains("test1", cut.Markup);
         Assert.Contains("test2", cut.Markup);
     }
@@ -115,7 +138,7 @@ public class SearchTest : BootstrapBlazorTestBase
             builder.Add(s => s.ClearButtonColor, Color.Secondary);
             builder.Add(s => s.ClearButtonIcon, "test-icon");
             builder.Add(s => s.ClearButtonText, "Clear");
-            builder.Add(s => s.OnClear, v =>
+            builder.Add(s => s.OnClear, () =>
             {
                 ret = true;
                 return Task.CompletedTask;
@@ -143,7 +166,9 @@ public class SearchTest : BootstrapBlazorTestBase
                 return items;
             });
         });
-        await cut.InvokeAsync(() => cut.Instance.TriggerChange("t"));
+
+        await cut.InvokeAsync(() => cut.Instance.TriggerFilter("t"));
+        await Task.Delay(20);
 
         var item = cut.Find(".dropdown-item");
         await cut.InvokeAsync(() => item.Click());

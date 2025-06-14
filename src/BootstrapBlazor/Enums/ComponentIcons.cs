@@ -56,31 +56,6 @@ public enum ComponentIcons
     AutoFillIcon,
 
     /// <summary>
-    /// ButtonUpload 组件 LoadingIcon 属性图标
-    /// </summary>
-    ButtonUploadLoadingIcon,
-
-    /// <summary>
-    /// ButtonUpload 组件 FailedInvalidIcon 属性图标
-    /// </summary>
-    ButtonUploadInvalidStatusIcon,
-
-    /// <summary>
-    /// ButtonUpload 组件 FailedValidIcon 属性图标
-    /// </summary>
-    ButtonUploadValidStatusIcon,
-
-    /// <summary>
-    /// ButtonUpload 组件 DownloadIcon 属性图标
-    /// </summary>
-    ButtonUploadDownloadIcon,
-
-    /// <summary>
-    /// ButtonUpload 组件 DeleteIcon 属性图标
-    /// </summary>
-    ButtonUploadDeleteIcon,
-
-    /// <summary>
     /// ButtonUpload 组件 BrowserButtonIcon 属性图标
     /// </summary>
     ButtonUploadBrowserButtonIcon,
@@ -116,19 +91,9 @@ public enum ComponentIcons
     CardUploadStatusIcon,
 
     /// <summary>
-    /// CardUpload 组件 DeleteIcon 图标
-    /// </summary>
-    CardUploadDeleteIcon,
-
-    /// <summary>
     /// CardUpload 组件 RemoveIcon 图标
     /// </summary>
     CardUploadRemoveIcon,
-
-    /// <summary>
-    /// CardUpload 组件 DownloadIcon 图标
-    /// </summary>
-    CardUploadDownloadIcon,
 
     /// <summary>
     /// CardUpload 组件 ZoomIcon 图标
@@ -136,9 +101,34 @@ public enum ComponentIcons
     CardUploadZoomIcon,
 
     /// <summary>
+    /// ButtonUpload 组件 LoadingIcon 属性图标
+    /// </summary>
+    UploadLoadingIcon,
+
+    /// <summary>
+    /// ButtonUpload 组件 FailedInvalidIcon 属性图标
+    /// </summary>
+    UploadInvalidStatusIcon,
+
+    /// <summary>
+    /// ButtonUpload 组件 FailedValidIcon 属性图标
+    /// </summary>
+    UploadValidStatusIcon,
+
+    /// <summary>
     /// Upload 组件 CancelIcon 图标
     /// </summary>
     UploadCancelIcon,
+
+    /// <summary>
+    /// CardUpload 组件 DeleteIcon 图标
+    /// </summary>
+    UploadDeleteIcon,
+
+    /// <summary>
+    /// CardUpload 组件 DownloadIcon 图标
+    /// </summary>
+    UploadDownloadIcon,
 
     /// <summary>
     /// Upload 组件 UploadIcon 图标
@@ -451,6 +441,11 @@ public enum ComponentIcons
     MultiSelectDropdownIcon,
 
     /// <summary>
+    /// MultiSelect 组件 CloseButtonIcon 图标
+    /// </summary>
+    MultiSelectCloseIcon,
+
+    /// <summary>
     /// MultiSelect 组件 ClearIcon 图标
     /// </summary>
     MultiSelectClearIcon,
@@ -701,6 +696,36 @@ public enum ComponentIcons
     TabCloseIcon,
 
     /// <summary>
+    /// Tab 组件 RefreshToolbarButtonIcon 属性图标
+    /// </summary>
+    TabRefreshButtonIcon,
+
+    /// <summary>
+    /// Tab 组件 TabContextMenuRefreshIcon 属性图标
+    /// </summary>
+    TabContextMenuRefreshIcon,
+
+    /// <summary>
+    /// Tab 组件 TabContextMenuCloseIcon 属性图标
+    /// </summary>
+    TabContextMenuCloseIcon,
+
+    /// <summary>
+    /// Tab 组件 TabContextMenuCloseOtherIcon 属性图标
+    /// </summary>
+    TabContextMenuCloseOtherIcon,
+
+    /// <summary>
+    /// Tab 组件 TabContextMenuCloseAllIcon 属性图标
+    /// </summary>
+    TabContextMenuCloseAllIcon,
+
+    /// <summary>
+    /// Tab 组件 TabContextMenuFullScreenIcon 属性图标
+    /// </summary>
+    TabContextMenuFullScreenIcon,
+
+    /// <summary>
     /// Timer 组件 Icon 属性图标
     /// </summary>
     TimerIcon,
@@ -739,6 +764,11 @@ public enum ComponentIcons
     /// TreeView 组件 LoadingIcon 属性图标
     /// </summary>
     TreeViewLoadingIcon,
+
+    /// <summary>
+    /// TreeView 组件 ToolbarEditButton 属性图标
+    /// </summary>
+    TreeViewToolbarEditButton,
 
     /// <summary>
     /// TreeView 组件 NodeIcon 属性图标
